@@ -1,0 +1,826 @@
+const {initializeApp} = require("firebase-admin/app");
+
+// Initialize Firebase Admin (if not already done)
+initializeApp();
+
+// Import and re-export social functions
+const socialFunctions = require("./social");
+
+// Import migration function
+const { migrateSponsorCategories } = require("./migrateSponsorCategories");
+
+// Import search functions (restore deleted functionality)
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const admin = require('firebase-admin');
+const geohash = require('ngeohash');
+const db = admin.firestore();
+const messaging = admin.messaging();
+
+// Helper function to generate search tokens for efficient prefix searching
+function generateSearchTokens(fields) {
+  const tokens = new Set();
+
+  for (const field of fields) {
+    if (!field || typeof field !== 'string') continue;
+
+    const cleanField = field.trim().toLowerCase();
+    if (cleanField.length === 0) continue;
+
+    // Generate prefixes for the whole field
+    for (let i = 1; i <= Math.min(cleanField.length, 20); i++) {
+      tokens.add(cleanField.substring(0, i));
+    }
+
+    // Generate prefixes for each word in the field
+    const words = cleanField.split(/\s+/);
+    for (const word of words) {
+      if (word.length > 0) {
+        for (let i = 1; i <= Math.min(word.length, 20); i++) {
+          tokens.add(word.substring(0, i));
+        }
+      }
+    }
+  }
+
+  return Array.from(tokens);
+}
+
+// Restored search functions
+const searchUsers = onCall(async (request) => {
+  const data = request.data;
+  const context = request;
+  try {
+    // 🛡️ SECURITY: Verify user is authenticated
+    if (!context.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated to search');
+    }
+
+    const { query, limit = 20, startAfter = null } = data;
+
+    // 🛡️ SECURITY: Validate input parameters
+    if (!query || typeof query !== 'string') {
+      throw new HttpsError('invalid-argument', 'Query parameter is required and must be a string');
+    }
+
+    // 🛡️ SECURITY: Sanitize query input
+    const sanitizedQuery = query.trim().toLowerCase();
+    if (sanitizedQuery.length < 2) {
+      throw new HttpsError('invalid-argument', 'Query must be at least 2 characters long');
+    }
+
+    if (sanitizedQuery.length > 50) {
+      throw new HttpsError('invalid-argument', 'Query must be less than 50 characters');
+    }
+
+    // 🛡️ SECURITY: Validate limit parameter
+    const searchLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 50); // Max 50 results
+
+    console.log(`[searchUsers] Processing search for query: "${sanitizedQuery}", limit: ${searchLimit}`);
+
+    // Build base query - only search active users
+    let searchQuery = db.collection('users')
+      .where('active', '==', true); // Only active users can be found in search
+
+    // 🚀 PERFORMANCE: Use search tokens for efficient prefix matching
+    // Search tokens are arrays of prefixes: ["t", "te", "tes", "test"] for "test"
+    searchQuery = searchQuery.where('searchTokens', 'array-contains', sanitizedQuery);
+
+    // Order by XP for consistent results (requires index)
+    searchQuery = searchQuery.orderBy('xp', 'desc');
+
+    // Apply pagination if startAfter cursor is provided
+    if (startAfter) {
+      try {
+        const startDoc = await db.collection('users').doc(startAfter).get();
+        if (startDoc.exists) {
+          searchQuery = searchQuery.startAfter(startDoc);
+        }
+      } catch (error) {
+        console.warn(`[searchUsers] Invalid startAfter cursor: ${startAfter}`, error);
+        // Continue without cursor if invalid
+      }
+    }
+
+    // Apply limit
+    searchQuery = searchQuery.limit(searchLimit + 1); // +1 to check if there are more results
+
+    // Execute search
+    const snapshot = await searchQuery.get();
+    const users = [];
+    let hasMore = false;
+
+    // Process results
+    const docs = snapshot.docs;
+    if (docs.length > searchLimit) {
+      hasMore = true;
+      docs.pop(); // Remove the extra document
+    }
+
+    for (const doc of docs) {
+      try {
+        const userData = doc.data();
+
+        // 🛡️ SECURITY: Apply privacy filtering
+        const isPublic = userData.public === true;
+
+        // 🚀 PERFORMANCE: Verify the match client-side for better accuracy
+        const displayName = userData.displayName || '';
+        const username = userData.username || '';
+        const email = userData.email || '';
+
+        const matchesQuery =
+          displayName.toLowerCase().includes(sanitizedQuery) ||
+          username.toLowerCase().includes(sanitizedQuery) ||
+          email.toLowerCase().includes(sanitizedQuery);
+
+        if (!matchesQuery) {
+          continue; // Skip if doesn't actually match
+        }
+
+        // Map to User model with privacy protection
+        const user = {
+          id: doc.id,
+          username: username,
+          displayName: displayName,
+          // 🛡️ SECURITY: Only expose email for public profiles
+          email: isPublic ? email : '',
+          // 🛡️ SECURITY: Only expose location for public profiles
+          city: isPublic ? (userData.city || 'Unknown') : 'Unknown',
+          country: isPublic ? (userData.country || 'Unknown') : 'Unknown',
+          xpPoints: userData.xp || 0,
+          spotsDiscovered: userData.spotsDiscovered || 0,
+          challengesCompleted: userData.challengesCompleted || 0,
+          level: userData.level || 1,
+          rank: userData.rank || 0,
+          profilePictureUrl: isPublic ? (userData.photoUrl || null) : null,
+          isActive: userData.active === true,
+          isPrivateProfile: !isPublic,
+          createdAt: userData.createdAt ? userData.createdAt.seconds * 1000 : Date.now(),
+          lastActiveAt: userData.lastLoginAt ? userData.lastLoginAt.seconds * 1000 : Date.now()
+        };
+
+        users.push(user);
+      } catch (error) {
+        console.error(`[searchUsers] Error processing user document ${doc.id}:`, error);
+        // Skip malformed documents
+      }
+    }
+
+    const result = {
+      items: users,
+      hasMore: hasMore,
+      nextCursor: hasMore && docs.length > 0 ? docs[docs.length - 1].id : null,
+      totalCount: users.length
+    };
+
+    console.log(`[searchUsers] Search completed. Found ${users.length} users, hasMore: ${hasMore}`);
+
+    return result;
+
+  } catch (error) {
+    console.error('[searchUsers] Cloud Function error:', error);
+
+    // Return appropriate error based on type
+    if (error instanceof HttpsError) {
+      throw error; // Re-throw HttpsError as-is
+    }
+
+    // Handle Firestore errors
+    if (error.code === 'permission-denied') {
+      throw new HttpsError('permission-denied', 'Insufficient permissions to search users');
+    }
+
+    if (error.code === 'failed-precondition') {
+      throw new HttpsError('failed-precondition', 'Search index not available. Please try again later.');
+    }
+
+    // Generic error for unknown issues
+    throw new HttpsError('internal', 'Search service temporarily unavailable');
+  }
+});
+
+const generateSearchTokensForExistingUsers = onCall(async (request) => {
+  const data = request.data;
+  const context = request;
+  try {
+    // 🛡️ SECURITY: Only admin can run this function
+    if (!context.auth || !context.auth.token.admin) {
+      throw new HttpsError('permission-denied', 'Only admin can run this function');
+    }
+
+    console.log('[generateSearchTokens] Starting search token generation for existing users');
+
+    let processedCount = 0;
+    let errorCount = 0;
+    const batchSize = 100;
+
+    // Get all users in batches
+    let query = db.collection('users').limit(batchSize);
+    let hasMore = true;
+
+    while (hasMore) {
+      const snapshot = await query.get();
+
+      if (snapshot.empty) {
+        hasMore = false;
+        break;
+      }
+
+      const batch = db.batch();
+
+      for (const doc of snapshot.docs) {
+        try {
+          const userData = doc.data();
+          const displayName = userData.displayName || '';
+          const username = userData.username || '';
+          const email = userData.email || '';
+
+          // Generate search tokens
+          const searchTokens = generateSearchTokens([displayName, username, email]);
+
+          // Only update if user doesn't already have search tokens
+          if (!userData.searchTokens || userData.searchTokens.length === 0) {
+            batch.update(doc.ref, { searchTokens });
+            processedCount++;
+          }
+
+        } catch (error) {
+          console.error(`[generateSearchTokens] Error processing user ${doc.id}:`, error);
+          errorCount++;
+        }
+      }
+
+      // Commit batch
+      await batch.commit();
+
+      // Set up next query
+      if (snapshot.docs.length === batchSize) {
+        query = db.collection('users')
+          .startAfter(snapshot.docs[snapshot.docs.length - 1])
+          .limit(batchSize);
+      } else {
+        hasMore = false;
+      }
+    }
+
+    const result = {
+      processedCount,
+      errorCount,
+      message: `Search token generation completed. Processed: ${processedCount}, Errors: ${errorCount}`
+    };
+
+    console.log(`[generateSearchTokens] ${result.message}`);
+    return result;
+
+  } catch (error) {
+    console.error('[generateSearchTokens] Function error:', error);
+    throw new HttpsError('internal', 'Failed to generate search tokens');
+  }
+});
+
+const generateSearchTokensOnUserUpdate = onDocumentWritten('users/{userId}', (event) => {
+  const change = event.data;
+  const context = event;
+    const data = change.after.exists ? change.after.data() : null;
+
+    if (!data) {
+      // Document was deleted, nothing to do
+      return null;
+    }
+
+    const displayName = data.displayName || '';
+    const username = data.username || '';
+    const email = data.email || '';
+
+    // Generate search tokens
+    const searchTokens = generateSearchTokens([displayName, username, email]);
+
+    // Only update if tokens changed
+    const existingTokens = data.searchTokens || [];
+    if (JSON.stringify(searchTokens.sort()) === JSON.stringify(existingTokens.sort())) {
+      return null; // No change needed
+    }
+
+    console.log(`[generateSearchTokensOnUserUpdate] Updating search tokens for user ${context.params.userId}`);
+
+    // Update the document with search tokens
+    return change.after.ref.update({ searchTokens });
+  });
+
+// ================================
+// CRITICAL RESTORED FUNCTIONS
+// ================================
+
+/**
+ * Award XP to users for admin dashboard (CRITICAL FUNCTION)
+ */
+const adminGrantXP = onCall(async (request) => {
+  const data = request.data;
+  const auth = request.auth;
+
+  try {
+    console.log('adminGrantXP called with data:', data);
+
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { userId, xpAmount, reason } = data;
+
+    if (!userId || !xpAmount || !reason) {
+      throw new HttpsError('invalid-argument', 'Missing required fields: userId, xpAmount, reason');
+    }
+
+    if (typeof xpAmount !== 'number' || xpAmount <= 0) {
+      throw new HttpsError('invalid-argument', 'xpAmount must be a positive number');
+    }
+
+    // Update user XP
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      throw new HttpsError('not-found', 'User not found');
+    }
+
+    const userData = userDoc.data();
+    const currentXP = userData.xpPoints || userData.xp || 0;
+    const newXP = currentXP + xpAmount;
+
+    await userRef.update({
+      xpPoints: newXP,
+      xp: newXP,
+      lastXpUpdate: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`Granted ${xpAmount} XP to user ${userId}. New total: ${newXP}`);
+
+    return {
+      success: true,
+      previousXP: currentXP,
+      newXP: newXP,
+      xpGranted: xpAmount
+    };
+
+  } catch (error) {
+    console.error('Error in adminGrantXP:', error);
+    if (error.code) {
+      throw error;
+    }
+    throw new HttpsError('internal', 'Failed to grant XP');
+  }
+});
+
+/**
+ * Get nearby spots using geohash (CRITICAL FUNCTION)
+ */
+const getNearbySpots = onCall(async (request) => {
+  try {
+    const { latitude, longitude, radiusKm, limit = 50 } = request.data;
+
+    // Validate inputs
+    if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+      return {
+        success: false,
+        spots: [],
+        count: 0,
+        error: 'Invalid coordinates'
+      };
+    }
+
+    if (radiusKm <= 0 || radiusKm > 1000) {
+      return {
+        success: false,
+        spots: [],
+        count: 0,
+        error: 'Invalid radius (must be between 0 and 1000 km)'
+      };
+    }
+
+    // Generate geohash bounds for the search area
+    const centerGeohash = geohash.encode(latitude, longitude, 12);
+
+    // Calculate approximate geohash precision based on radius
+    let precision = 12;
+    if (radiusKm > 100) precision = 6;
+    else if (radiusKm > 50) precision = 7;
+    else if (radiusKm > 20) precision = 8;
+    else if (radiusKm > 10) precision = 9;
+    else if (radiusKm > 5) precision = 10;
+    else if (radiusKm > 1) precision = 11;
+
+    const geohashPrefix = centerGeohash.substring(0, precision);
+
+    // Query spots with geohash prefix
+    const spotsQuery = await db
+      .collection('spots')
+      .where('geohash', '>=', geohashPrefix)
+      .where('geohash', '<', geohashPrefix + '\uf8ff')
+      .where('isActive', '==', true)
+      .limit(limit * 2)
+      .get();
+
+    const nearbySpots = [];
+
+    spotsQuery.docs.forEach(doc => {
+      const spotData = doc.data();
+      const spotLat = spotData.latitude || (spotData.location && spotData.location.latitude);
+      const spotLng = spotData.longitude || (spotData.location && spotData.location.longitude);
+
+      if (spotLat && spotLng) {
+        // Calculate actual distance
+        const distance = calculateDistance(latitude, longitude, spotLat, spotLng);
+
+        if (distance <= radiusKm) {
+          nearbySpots.push({
+            id: doc.id,
+            ...spotData,
+            distance: Math.round(distance * 100) / 100
+          });
+        }
+      }
+    });
+
+    // Sort by distance and limit results
+    nearbySpots.sort((a, b) => a.distance - b.distance);
+    const limitedSpots = nearbySpots.slice(0, limit);
+
+    return {
+      success: true,
+      spots: limitedSpots,
+      count: limitedSpots.length
+    };
+
+  } catch (error) {
+    console.error('Error getting nearby spots:', error);
+    return {
+      success: false,
+      spots: [],
+      count: 0,
+      error: error.message
+    };
+  }
+});
+
+/**
+ * Calculate distance between two points using Haversine formula
+ */
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
+ * Create reward securely (CRITICAL FUNCTION)
+ */
+const createRewardSecure = onCall(async (request) => {
+  try {
+    const { title, description, xpRequired, sponsorId, category, imageUrl } = request.data;
+    const auth = request.auth;
+
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    if (!title || !description || !xpRequired || !sponsorId) {
+      throw new HttpsError('invalid-argument', 'Missing required fields');
+    }
+
+    const rewardData = {
+      title,
+      description,
+      xpRequired,
+      sponsorId,
+      category: category || 'general',
+      imageUrl: imageUrl || null,
+      active: true,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdBy: auth.uid
+    };
+
+    const rewardRef = await db.collection('rewards').add(rewardData);
+
+    return {
+      success: true,
+      rewardId: rewardRef.id,
+      reward: rewardData
+    };
+
+  } catch (error) {
+    console.error('Error creating reward:', error);
+    if (error.code) {
+      throw error;
+    }
+    throw new HttpsError('internal', 'Failed to create reward');
+  }
+});
+
+/**
+ * Send spot approval notification (CRITICAL FUNCTION)
+ */
+const sendSpotApprovalNotification = onCall(async (request) => {
+  const data = request.data;
+  try {
+    const { userId, spotTitle } = data;
+
+    // Award 100 XP to the user for spot approval
+    const SPOT_APPROVAL_XP = 100;
+
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      const currentXp = userData?.xpPoints || userData?.xp || 0;
+      const newXp = currentXp + SPOT_APPROVAL_XP;
+
+      // Update user XP (using xpPoints to match Android app)
+      await userRef.update({
+        xpPoints: newXp,
+        xp: newXp, // Also update xp for backwards compatibility
+        lastXpUpdate: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(`Awarded ${SPOT_APPROVAL_XP} XP to user ${userId} for spot approval. New XP: ${newXp}`);
+    } else {
+      console.warn(`User ${userId} not found, cannot award XP`);
+    }
+
+    const payload = {
+      title: 'Spot Approved! 🎉',
+      body: `Your spot "${spotTitle}" has been approved! You earned ${SPOT_APPROVAL_XP} XP!`,
+      data: {
+        type: 'spot_approval',
+        spotTitle,
+        xpAwarded: SPOT_APPROVAL_XP.toString()
+      }
+    };
+
+    // Create notification record
+    const notificationRef = await db.collection('notifications').add({
+      title: payload.title,
+      body: payload.body,
+      type: 'single',
+      targetUserId: userId,
+      city: null,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      sent: false
+    });
+
+    return {
+      success: true,
+      notificationId: notificationRef.id,
+      xpAwarded: SPOT_APPROVAL_XP
+    };
+
+  } catch (error) {
+    console.error('Error sending spot approval notification:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+/**
+ * Send broadcast notification to all users (CRITICAL FUNCTION)
+ */
+const sendBroadcastNotification = onCall(async (request) => {
+  const data = request.data;
+  try {
+    console.log('Firebase Function received data:', JSON.stringify(data, null, 2));
+
+    const { notificationId, payload } = data;
+
+    if (!payload || !payload.title) {
+      return {
+        success: false,
+        error: 'Invalid payload'
+      };
+    }
+
+    // Get all active users with FCM tokens
+    const users = await getActiveUsers();
+
+    if (users.length === 0) {
+      return {
+        success: false,
+        error: 'No users with FCM tokens found'
+      };
+    }
+
+    // Extract tokens
+    const tokens = users.map(user => user.fcmToken);
+
+    // Send FCM messages
+    const fcmResult = await sendToMultipleTokens(tokens, payload);
+
+    // Create user notification documents for all users
+    const batch = db.batch();
+
+    users.forEach(user => {
+      const userNotificationRef = db
+        .collection('users')
+        .doc(user.id)
+        .collection('notifications')
+        .doc();
+
+      const userNotificationData = {
+        title: payload.title,
+        body: payload.body,
+        read: false,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        notificationId,
+        imageUrl: payload.imageUrl
+      };
+
+      batch.set(userNotificationRef, userNotificationData);
+    });
+
+    await batch.commit();
+
+    return {
+      success: true,
+      deliveredCount: fcmResult.successCount,
+      failedCount: fcmResult.failureCount
+    };
+
+  } catch (error) {
+    console.error('Error sending broadcast notification:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+/**
+ * Get active users with FCM tokens
+ */
+async function getActiveUsers() {
+  const usersQuery = await db
+    .collection('users')
+    .where('active', '==', true)
+    .get();
+
+  const users = [];
+
+  usersQuery.docs.forEach(doc => {
+    const data = doc.data();
+    if (data.fcmToken) {
+      users.push({
+        id: doc.id,
+        fcmToken: data.fcmToken
+      });
+    }
+  });
+
+  return users;
+}
+
+/**
+ * Send FCM messages to multiple tokens
+ */
+async function sendToMultipleTokens(tokens, payload) {
+  if (tokens.length === 0) {
+    return { successCount: 0, failureCount: 0, responses: [] };
+  }
+
+  const message = {
+    notification: {
+      title: payload.title,
+      body: payload.body,
+      ...(payload.imageUrl && { imageUrl: payload.imageUrl })
+    },
+    data: payload.data || {},
+    tokens
+  };
+
+  const response = await messaging.sendEachForMulticast(message);
+  return response;
+}
+
+/**
+ * Redeem reward legacy (CRITICAL FUNCTION)
+ */
+const redeemRewardLegacy = onCall(async (request) => {
+  const { rewardId } = request.data;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  if (!rewardId) {
+    throw new HttpsError('invalid-argument', 'rewardId is required');
+  }
+
+  try {
+    // Use transaction to ensure atomicity
+    const result = await db.runTransaction(async (transaction) => {
+      // Get reward document
+      const rewardRef = db.collection('rewards').doc(rewardId);
+      const rewardDoc = await transaction.get(rewardRef);
+
+      if (!rewardDoc.exists) {
+        throw new HttpsError('not-found', 'Reward not found');
+      }
+
+      const reward = rewardDoc.data();
+
+      // Get user document
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await transaction.get(userRef);
+
+      if (!userDoc.exists) {
+        throw new HttpsError('not-found', 'User not found');
+      }
+
+      const user = userDoc.data();
+      const userXP = user.xpPoints || user.xp || 0;
+
+      // Check if user has enough XP
+      if (userXP < reward.xpRequired) {
+        throw new HttpsError('failed-precondition', `Insufficient XP. Required: ${reward.xpRequired}, Current: ${userXP}`);
+      }
+
+      // Check if user has already redeemed this reward
+      const existingRedemption = await transaction.get(
+        db.collection('users').doc(userId).collection('redemptions').where('rewardId', '==', rewardId).limit(1)
+      );
+
+      if (!existingRedemption.empty) {
+        throw new HttpsError('already-exists', 'Reward already redeemed');
+      }
+
+      // Deduct XP from user
+      const newXP = userXP - reward.xpRequired;
+      transaction.update(userRef, {
+        xpPoints: newXP,
+        xp: newXP,
+        lastXpUpdate: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Create redemption record
+      const redemptionRef = db.collection('users').doc(userId).collection('redemptions').doc();
+      transaction.set(redemptionRef, {
+        rewardId: rewardId,
+        rewardTitle: reward.title,
+        xpSpent: reward.xpRequired,
+        sponsorId: reward.sponsorId,
+        status: 'pending',
+        redeemedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      return {
+        success: true,
+        redemptionId: redemptionRef.id,
+        newXP: newXP,
+        xpSpent: reward.xpRequired
+      };
+    });
+
+    return result;
+
+  } catch (error) {
+    console.error('Error redeeming reward:', error);
+    if (error.code) {
+      throw error;
+    }
+    throw new HttpsError('internal', 'Failed to redeem reward');
+  }
+});
+
+// Import NEW verification system functions with different names to avoid conflicts (DISABLED FOR NOW)
+// const verificationFunctions = require("./spotVerificationNew");
+// const xpFunctions = require("./xpManagementNew");
+// const reportingFunctions = require("./spotReportingNew");
+
+// Export all functions to make them deployable
+module.exports = {
+  ...socialFunctions,
+  migrateSponsorCategories,
+  searchUsers,
+  generateSearchTokensForExistingUsers,
+  generateSearchTokensOnUserUpdate,
+  // RESTORED CRITICAL FUNCTIONS
+  adminGrantXP,
+  getNearbySpots,
+  createRewardSecure,
+  sendSpotApprovalNotification,
+  sendBroadcastNotification,
+  redeemRewardLegacy,
+  // Verification functions disabled while we restore missing functions
+  // ...verificationFunctions,
+  // ...xpFunctions,
+  // ...reportingFunctions,
+};

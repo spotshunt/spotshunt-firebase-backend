@@ -4,15 +4,8 @@ const {
   onDocumentDeleted,
 } = require("firebase-functions/v2/firestore");
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
-const admin = require("firebase-admin");
 
-// Initialize Firebase Admin if not already done
-try {
-  admin.initializeApp();
-} catch (error) {
-  // App already initialized, ignore
-}
-
+// Note: firebase-admin should already be initialized in index.js
 const db = getFirestore();
 
 /**
@@ -406,21 +399,20 @@ const batchCheckLikeStatus = onCall(async (request) => {
 /**
  * Triggered when a follow relationship is created
  * Can be used for notifications or other side effects
- * TEMPORARILY DISABLED DUE TO CONFLICT
  */
-// const onFollowCreated = onDocumentCreated(
-//     "users/{userId}/followers/{followerId}",
-//     (event) => {
-//       const followerId = event.params.followerId;
-//       const userId = event.params.userId;
+const onFollowCreated = onDocumentCreated(
+    "users/{userId}/followers/{followerId}",
+    (event) => {
+      const followerId = event.params.followerId;
+      const userId = event.params.userId;
 
-//       console.log(`User ${followerId} followed user ${userId}`);
+      console.log(`User ${followerId} followed user ${userId}`);
 
-//       // Here you could trigger notifications, update analytics, etc.
-//       // Example: Send notification to the followed user
+      // Here you could trigger notifications, update analytics, etc.
+      // Example: Send notification to the followed user
 
-//       return Promise.resolve();
-//     });
+      return Promise.resolve();
+    });
 
 /**
  * Triggered when a follow relationship is deleted
@@ -457,18 +449,17 @@ const onLikeCreated = onDocumentCreated(
 /**
  * Triggered when a like is deleted
  * Can be used for analytics
- * TEMPORARILY DISABLED DUE TO CONFLICT
  */
-// const onLikeDeleted = onDocumentDeleted(
-//     "spots/{spotId}/likes/{userId}",
-//     (event) => {
-//       const userId = event.params.userId;
-//       const spotId = event.params.spotId;
+const onLikeDeleted = onDocumentDeleted(
+    "spots/{spotId}/likes/{userId}",
+    (event) => {
+      const userId = event.params.userId;
+      const spotId = event.params.spotId;
 
-//       console.log(`User ${userId} unliked spot ${spotId}`);
+      console.log(`User ${userId} unliked spot ${spotId}`);
 
-//       return Promise.resolve();
-//     });
+      return Promise.resolve();
+    });
 
 // Export only the social functions
 module.exports = {
@@ -479,9 +470,9 @@ module.exports = {
   checkLikeStatus,
   batchCheckFollowStatus,
   batchCheckLikeStatus,
-  // Trigger functions (some temporarily disabled due to conflicts)
-  // onFollowCreated,  // DISABLED - conflict
+  // Trigger functions
+  onFollowCreated,
   onFollowDeleted,
   onLikeCreated,
-  // onLikeDeleted,    // DISABLED - conflict
+  onLikeDeleted,
 };

@@ -1,0 +1,1996 @@
+{
+  "status": "success",
+  "result": [
+    {
+      "platform": "gcfv2",
+      "id": "adjustUserXP",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "adjustUserXP",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "adjustUserXP/function-source.zip",
+          "generation": "1767675068719003"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/adjustUserXP",
+        "FUNCTION_TARGET": "adjustUserXP",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "adjustuserxp",
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/adjustUserXP",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "adminGrantXP",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "adminGrantXP",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "adminGrantXP/function-source.zip",
+          "generation": "1767679785326631"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/adminGrantXP",
+        "FUNCTION_TARGET": "adminGrantXP",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/adminGrantXP",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b"
+      },
+      "runServiceId": "admingrantxp",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "api",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "httpsTrigger": {},
+      "entryPoint": "api",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "api/function-source.zip",
+          "generation": "1767682878267488"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/api",
+        "FUNCTION_TARGET": "api",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/api",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "7614c3f179c375728ba3b137fb0e3d1991978581",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "api",
+      "codebase": "default",
+      "hash": "7614c3f179c375728ba3b137fb0e3d1991978581",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "awardXP",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "awardXP",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "awardXP/function-source.zip",
+          "generation": "1767674578296634"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/awardXP",
+        "FUNCTION_TARGET": "awardXP",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/awardXP",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "awardxp",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "batchCheckFollowStatus",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "batchCheckFollowStatus",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "batchCheckFollowStatus/function-source.zip",
+          "generation": "1767679237354890"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/batchCheckFollowStatus",
+        "FUNCTION_TARGET": "batchCheckFollowStatus",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/batchCheckFollowStatus",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b"
+      },
+      "runServiceId": "batchcheckfollowstatus",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "batchCheckLikeStatus",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "batchCheckLikeStatus",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "batchCheckLikeStatus/function-source.zip",
+          "generation": "1767674578672434"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/batchCheckLikeStatus",
+        "FUNCTION_TARGET": "batchCheckLikeStatus",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/batchCheckLikeStatus",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "batchchecklikestatus",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "checkFollowStatus",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "checkFollowStatus",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "checkFollowStatus/function-source.zip",
+          "generation": "1767679133257959"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/checkFollowStatus",
+        "FUNCTION_TARGET": "checkFollowStatus",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/checkFollowStatus",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b"
+      },
+      "runServiceId": "checkfollowstatus",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "checkLikeStatus",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "checkLikeStatus",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "checkLikeStatus/function-source.zip",
+          "generation": "1767674578613784"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/checkLikeStatus",
+        "FUNCTION_TARGET": "checkLikeStatus",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/checkLikeStatus",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "checklikestatus",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "cleanupInvalidTokens",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "cleanupInvalidTokens",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "cleanupInvalidTokens/function-source.zip",
+          "generation": "1767674578588356"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/cleanupInvalidTokens",
+        "FUNCTION_TARGET": "cleanupInvalidTokens",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/cleanupInvalidTokens",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "cleanupinvalidtokens",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "cleanupMigration",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "cleanupMigration",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "cleanupMigration/function-source.zip",
+          "generation": "1767614955997510"
+        }
+      },
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/cleanupMigration",
+      "codebase": "default",
+      "hash": "d43d6329152dcd11fef09c7feb34cd4ac4f751e6",
+      "state": "FAILED"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "createRewardSecure",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "createRewardSecure",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "createRewardSecure/function-source.zip",
+          "generation": "1767679451447917"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/createRewardSecure",
+        "FUNCTION_TARGET": "createRewardSecure",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/createRewardSecure",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b"
+      },
+      "runServiceId": "createrewardsecure",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "generateSearchTokensForExistingUsers",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "generateSearchTokensForExistingUsers",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "generateSearchTokensForExistingUsers/function-source.zip",
+          "generation": "1767679892652155"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/generateSearchTokensForExistingUsers",
+        "FUNCTION_TARGET": "generateSearchTokensForExistingUsers",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/generateSearchTokensForExistingUsers",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "generatesearchtokensforexistingusers",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "generateSearchTokensOnUserUpdate",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "eventTrigger": {
+        "eventType": "google.cloud.firestore.document.v1.written",
+        "retry": false,
+        "eventFilters": {
+          "database": "(default)",
+          "namespace": "(default)"
+        },
+        "eventFilterPathPatterns": {
+          "document": "users/{userId}"
+        },
+        "region": "eur3"
+      },
+      "entryPoint": "generateSearchTokensOnUserUpdate",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "generateSearchTokensOnUserUpdate/function-source.zip",
+          "generation": "1767674637389603"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/generateSearchTokensOnUserUpdate",
+        "FUNCTION_SIGNATURE_TYPE": "cloudevent",
+        "FUNCTION_TARGET": "generateSearchTokensOnUserUpdate",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/generateSearchTokensOnUserUpdate",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "generatesearchtokensonuserupdate",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "generateSponsorQR",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "generateSponsorQR",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "generateSponsorQR/function-source.zip",
+          "generation": "1767674578372558"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/generateSponsorQR",
+        "FUNCTION_TARGET": "generateSponsorQR",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/generateSponsorQR",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "generatesponsorqr",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "getDashboardData",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "getDashboardData",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "getDashboardData/function-source.zip",
+          "generation": "1767676781001417"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/getDashboardData",
+        "FUNCTION_TARGET": "getDashboardData",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/getDashboardData",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "getdashboarddata",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "getNearbySpots",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "getNearbySpots",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "getNearbySpots/function-source.zip",
+          "generation": "1767674578357653"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/getNearbySpots",
+        "FUNCTION_TARGET": "getNearbySpots",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/getNearbySpots",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "getnearbyspots",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "getQRStats",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "getQRStats",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "getQRStats/function-source.zip",
+          "generation": "1767674578416064"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/getQRStats",
+        "FUNCTION_TARGET": "getQRStats",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/getQRStats",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "getqrstats",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "getRecentActivities",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "getRecentActivities",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "getRecentActivities/function-source.zip",
+          "generation": "1767676038218101"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/getRecentActivities",
+        "FUNCTION_TARGET": "getRecentActivities",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/getRecentActivities",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b"
+      },
+      "runServiceId": "getrecentactivities",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "getSpotReports",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "getSpotReports",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "getSpotReports/function-source.zip",
+          "generation": "1767674577807339"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/getSpotReports",
+        "FUNCTION_TARGET": "getSpotReports",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/getSpotReports",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "getspotreports",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "handleSpotVerificationUpdate",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "httpsTrigger": {},
+      "entryPoint": "handleSpotVerificationUpdate",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "handleSpotVerificationUpdate/function-source.zip",
+          "generation": "1767628254568373"
+        }
+      },
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/handleSpotVerificationUpdate",
+      "codebase": "default",
+      "hash": "567af1c3d2d9caa1e68fc939cb4743856923d86b",
+      "state": "FAILED"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "initializeSponsorQRSecrets",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "initializeSponsorQRSecrets",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "initializeSponsorQRSecrets/function-source.zip",
+          "generation": "1767674578562800"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/initializeSponsorQRSecrets",
+        "FUNCTION_TARGET": "initializeSponsorQRSecrets",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/initializeSponsorQRSecrets",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "initializesponsorqrsecrets",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "migrateSponsorCategories",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "httpsTrigger": {},
+      "entryPoint": "migrateSponsorCategories",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "migrateSponsorCategories/function-source.zip",
+          "generation": "1767679651973331"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/migrateSponsorCategories",
+        "FUNCTION_TARGET": "migrateSponsorCategories",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 540,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/migrateSponsorCategories",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 512,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "migratesponsorcategories",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "migrateSpotGeohashes",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "migrateSpotGeohashes",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "migrateSpotGeohashes/function-source.zip",
+          "generation": "1767674578447170"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/migrateSpotGeohashes",
+        "FUNCTION_TARGET": "migrateSpotGeohashes",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/migrateSpotGeohashes",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "migratespotgeohashes",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "onFollowCreated",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "httpsTrigger": {},
+      "entryPoint": "onFollowCreated",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "onFollowCreated/function-source.zip",
+          "generation": "1767614853012563"
+        }
+      },
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/onFollowCreated",
+      "codebase": "default",
+      "hash": "d43d6329152dcd11fef09c7feb34cd4ac4f751e6",
+      "state": "FAILED"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "onFollowDeleted",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "eventTrigger": {
+        "eventType": "google.cloud.firestore.document.v1.deleted",
+        "retry": false,
+        "eventFilters": {
+          "namespace": "(default)",
+          "database": "(default)"
+        },
+        "eventFilterPathPatterns": {
+          "document": "users/{userId}/followers/{followerId}"
+        },
+        "region": "eur3"
+      },
+      "entryPoint": "onFollowDeleted",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "onFollowDeleted/function-source.zip",
+          "generation": "1767679347212655"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/onFollowDeleted",
+        "FUNCTION_SIGNATURE_TYPE": "cloudevent",
+        "FUNCTION_TARGET": "onFollowDeleted",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/onFollowDeleted",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b"
+      },
+      "runServiceId": "onfollowdeleted",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "onLikeCreated",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "eventTrigger": {
+        "eventType": "google.cloud.firestore.document.v1.created",
+        "retry": false,
+        "eventFilters": {
+          "database": "(default)",
+          "namespace": "(default)"
+        },
+        "eventFilterPathPatterns": {
+          "document": "spots/{spotId}/likes/{userId}"
+        },
+        "region": "eur3"
+      },
+      "entryPoint": "onLikeCreated",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "onLikeCreated/function-source.zip",
+          "generation": "1767674578762099"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/onLikeCreated",
+        "FUNCTION_SIGNATURE_TYPE": "cloudevent",
+        "FUNCTION_TARGET": "onLikeCreated",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/onLikeCreated",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "onlikecreated",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "onLikeDeleted",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "httpsTrigger": {},
+      "entryPoint": "onLikeDeleted",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "onLikeDeleted/function-source.zip",
+          "generation": "1767614946171286"
+        }
+      },
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/onLikeDeleted",
+      "codebase": "default",
+      "hash": "d43d6329152dcd11fef09c7feb34cd4ac4f751e6",
+      "state": "FAILED"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "processSpotReport",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "httpsTrigger": {},
+      "entryPoint": "processSpotReport",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "processSpotReport/function-source.zip",
+          "generation": "1767674577687204"
+        }
+      },
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/processSpotReport",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "FAILED"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "redeemByQR",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "redeemByQR",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "redeemByQR/function-source.zip",
+          "generation": "1767674578463585"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/redeemByQR",
+        "FUNCTION_TARGET": "redeemByQR",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/redeemByQR",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "redeembyqr",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "redeemRewardLegacy",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "redeemRewardLegacy",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "redeemRewardLegacy/function-source.zip",
+          "generation": "1767674625866980"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/redeemRewardLegacy",
+        "FUNCTION_TARGET": "redeemRewardLegacy",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/redeemRewardLegacy",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "redeemrewardlegacy",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "regenerateSponsorQR",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "regenerateSponsorQR",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "regenerateSponsorQR/function-source.zip",
+          "generation": "1767674578566483"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/regenerateSponsorQR",
+        "FUNCTION_TARGET": "regenerateSponsorQR",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/regenerateSponsorQR",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "regeneratesponsorqr",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "reportSpot",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "reportSpot",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "reportSpot/function-source.zip",
+          "generation": "1767674577709134"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/reportSpot",
+        "FUNCTION_TARGET": "reportSpot",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/reportSpot",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "reportspot",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "resolveSpotReport",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "resolveSpotReport",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "resolveSpotReport/function-source.zip",
+          "generation": "1767674577754471"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/resolveSpotReport",
+        "FUNCTION_TARGET": "resolveSpotReport",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/resolveSpotReport",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "resolvespotreport",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "searchUsers",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "searchUsers",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "searchUsers/function-source.zip",
+          "generation": "1767674626377103"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/searchUsers",
+        "FUNCTION_TARGET": "searchUsers",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/searchUsers",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "searchusers",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendBroadcastNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendBroadcastNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendBroadcastNotification/function-source.zip",
+          "generation": "1767679551115433"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendBroadcastNotification",
+        "FUNCTION_TARGET": "sendBroadcastNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendBroadcastNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b"
+      },
+      "runServiceId": "sendbroadcastnotification",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendCityNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendCityNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendCityNotification/function-source.zip",
+          "generation": "1767674578476113"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendCityNotification",
+        "FUNCTION_TARGET": "sendCityNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendCityNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "sendcitynotification",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendCustomNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendCustomNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendCustomNotification/function-source.zip",
+          "generation": "1767674578377470"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendCustomNotification",
+        "FUNCTION_TARGET": "sendCustomNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendCustomNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "sendcustomnotification",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendNewCityContentNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendNewCityContentNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendNewCityContentNotification/function-source.zip",
+          "generation": "1767674578501206"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendNewCityContentNotification",
+        "FUNCTION_TARGET": "sendNewCityContentNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendNewCityContentNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "sendnewcitycontentnotification",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendRewardApprovalNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendRewardApprovalNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendRewardApprovalNotification/function-source.zip",
+          "generation": "1767674578380251"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendRewardApprovalNotification",
+        "FUNCTION_TARGET": "sendRewardApprovalNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendRewardApprovalNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "sendrewardapprovalnotification",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendRewardRejectionNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendRewardRejectionNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendRewardRejectionNotification/function-source.zip",
+          "generation": "1767674578435233"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendRewardRejectionNotification",
+        "FUNCTION_TARGET": "sendRewardRejectionNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendRewardRejectionNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "sendrewardrejectionnotification",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendSingleNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendSingleNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendSingleNotification/function-source.zip",
+          "generation": "1767674578186339"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendSingleNotification",
+        "FUNCTION_TARGET": "sendSingleNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendSingleNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "sendsinglenotification",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendSpotApprovalNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendSpotApprovalNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendSpotApprovalNotification/function-source.zip",
+          "generation": "1767674578495274"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendSpotApprovalNotification",
+        "FUNCTION_TARGET": "sendSpotApprovalNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendSpotApprovalNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "sendspotapprovalnotification",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "sendSpotRejectionNotification",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "sendSpotRejectionNotification",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "sendSpotRejectionNotification/function-source.zip",
+          "generation": "1767674578121617"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/sendSpotRejectionNotification",
+        "FUNCTION_TARGET": "sendSpotRejectionNotification",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/sendSpotRejectionNotification",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "sendspotrejectionnotification",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "toggleFollow",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "toggleFollow",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "toggleFollow/function-source.zip",
+          "generation": "1767679032296492"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/toggleFollow",
+        "FUNCTION_TARGET": "toggleFollow",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/toggleFollow",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "togglefollow",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "toggleLike",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "toggleLike",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "toggleLike/function-source.zip",
+          "generation": "1767674578542599"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/toggleLike",
+        "FUNCTION_TARGET": "toggleLike",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/toggleLike",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "togglelike",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "updateQRSettings",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "updateQRSettings",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "updateQRSettings/function-source.zip",
+          "generation": "1767674578514748"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/updateQRSettings",
+        "FUNCTION_TARGET": "updateQRSettings",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/updateQRSettings",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "updateqrsettings",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "updateUserLoginSource",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "updateUserLoginSource",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "updateUserLoginSource/function-source.zip",
+          "generation": "1767676470910177"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/updateUserLoginSource",
+        "FUNCTION_TARGET": "updateUserLoginSource",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/updateUserLoginSource",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b"
+      },
+      "runServiceId": "updateuserloginsource",
+      "codebase": "default",
+      "hash": "054440168ffa7390c35cc986b3bd0bc7893cff0b",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "validateQRCode",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "validateQRCode",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "validateQRCode/function-source.zip",
+          "generation": "1767674578364341"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/validateQRCode",
+        "FUNCTION_TARGET": "validateQRCode",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/validateQRCode",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9"
+      },
+      "runServiceId": "validateqrcode",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "validateRedemption",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "validateRedemption",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "validateRedemption/function-source.zip",
+          "generation": "1767674578362683"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/validateRedemption",
+        "FUNCTION_TARGET": "validateRedemption",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/validateRedemption",
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "deployment-callable": "true",
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase"
+      },
+      "runServiceId": "validateredemption",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "verifySpotSubmission",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "callableTrigger": {},
+      "entryPoint": "verifySpotSubmission",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-173855813731-us-central1",
+          "object": "verifySpotSubmission/function-source.zip",
+          "generation": "1767674578361390"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/services/verifySpotSubmission",
+        "FUNCTION_TARGET": "verifySpotSubmission",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "serviceAccount": "173855813731-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 3,
+      "concurrency": 80,
+      "labels": {
+        "firebase-functions-hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+        "deployment-tool": "cli-firebase",
+        "deployment-callable": "true"
+      },
+      "runServiceId": "verifyspotsubmission",
+      "uri": "https://us-central1-mysteryspot-ef091.cloudfunctions.net/verifySpotSubmission",
+      "codebase": "default",
+      "hash": "86c6f7b059d5d22a3b1e635a76ca8e29ef07e7a9",
+      "state": "UNKNOWN"
+    },
+    {
+      "platform": "gcfv1",
+      "id": "onRewardRedeemed",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "eventTrigger": {
+        "eventType": "providers/cloud.firestore/eventTypes/document.create",
+        "eventFilters": {
+          "resource": "projects/mysteryspot-ef091/databases/(default)/documents/redemptions/{redemptionId}"
+        },
+        "retry": false
+      },
+      "entryPoint": "onRewardRedeemed",
+      "runtime": "nodejs20",
+      "maxInstances": 3000,
+      "ingressSettings": "ALLOW_ALL",
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "firebase-functions-hash": "6eea0d8f6ace1a33b7a9d1f0c6cb538854a1e5df"
+      },
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/functions/onRewardRedeemed"
+      },
+      "sourceUploadUrl": "https://storage.googleapis.com/uploads-994645944473.us-central1.cloudfunctions.appspot.com/5d0d5204-62cd-42f6-8b03-d26bb8a5b34d.zip",
+      "serviceAccount": "mysteryspot-ef091@appspot.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "timeoutSeconds": 60,
+      "codebase": "default",
+      "hash": "6eea0d8f6ace1a33b7a9d1f0c6cb538854a1e5df",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv1",
+      "id": "onSpotWrite",
+      "project": "mysteryspot-ef091",
+      "region": "us-central1",
+      "eventTrigger": {
+        "eventType": "providers/cloud.firestore/eventTypes/document.write",
+        "eventFilters": {
+          "resource": "projects/mysteryspot-ef091/databases/(default)/documents/spots/{spotId}"
+        },
+        "retry": false
+      },
+      "entryPoint": "onSpotWrite",
+      "runtime": "nodejs20",
+      "maxInstances": 3000,
+      "ingressSettings": "ALLOW_ALL",
+      "labels": {
+        "firebase-functions-hash": "6eea0d8f6ace1a33b7a9d1f0c6cb538854a1e5df",
+        "deployment-tool": "cli-firebase"
+      },
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"mysteryspot-ef091\",\"storageBucket\":\"mysteryspot-ef091.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "mysteryspot-ef091",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/mysteryspot-ef091/locations/us-central1/functions/onSpotWrite"
+      },
+      "sourceUploadUrl": "https://storage.googleapis.com/uploads-994645944473.us-central1.cloudfunctions.appspot.com/5d0d5204-62cd-42f6-8b03-d26bb8a5b34d.zip",
+      "serviceAccount": "mysteryspot-ef091@appspot.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "timeoutSeconds": 60,
+      "codebase": "default",
+      "hash": "6eea0d8f6ace1a33b7a9d1f0c6cb538854a1e5df",
+      "state": "ACTIVE"
+    }
+  ]
+}

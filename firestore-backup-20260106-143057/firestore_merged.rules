@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /* =========================================================
-       HELPER FUNCTIONS
+       HELPER FUNCTIONS (FROM OLD STABLE RULES + ENHANCEMENTS)
     ========================================================== */
 
     function isSignedIn() {
@@ -66,7 +66,7 @@ service cloud.firestore {
            get(/databases/$(database)/documents/users/$(uid)).data.role in ['admin', 'superadmin', 'sponsor']);
     }
 
-    // NEW: Helper function for public profile viewing
+    // Helper function for public profile viewing
     function isPublicProfile(userId) {
       let userDoc = get(/databases/$(database)/documents/users/$(userId));
       return userDoc != null &&
@@ -74,8 +74,7 @@ service cloud.firestore {
              userDoc.data.get('isPublic', false) == true;
     }
 
-    // NEW: Helper function to validate sponsor category
-    // Only allow predefined category IDs from the authoritative list
+    // Helper function to validate sponsor category
     function isValidSponsorCategory(categoryId) {
       return categoryId in [
         'cafe',
@@ -98,7 +97,7 @@ service cloud.firestore {
       ];
     }
 
-    // NEW: Validate secondary categories array
+    // Validate secondary categories array
     function areValidSecondaryCategories(categories) {
       return categories is list &&
              categories.size() <= 5 && // Max 5 secondary categories
@@ -113,7 +112,7 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       USERS COLLECTION
+       USERS COLLECTION (OLD STABLE RULES)
     ========================================================== */
     match /users/{userId} {
 
@@ -168,7 +167,8 @@ service cloud.firestore {
             'level',                 // 🔒 Level calculated server-side
             'spotsDiscovered',       // 🔒 Tracked server-side
             'challengesCompleted',   // 🔒 Tracked server-side
-            'rank'                   // 🔒 Calculated server-side
+            'rank',                  // 🔒 Calculated server-side
+            'trustScore'             // 🔒 Trust score managed by system only
           ])));
 
       // Only super admin can delete users
@@ -186,7 +186,6 @@ service cloud.firestore {
           request.resource.data.read is bool;
 
         // Only backend via Admin SDK can create notifications (prevents spam/abuse)
-        // Cloud Functions have admin privileges and can write here
         allow create: if false;
 
         allow delete: if isSignedIn() &&
@@ -254,7 +253,6 @@ service cloud.firestore {
           (request.auth.uid == userId || isAdmin(request.auth.uid));
 
         // 🔒 SECURITY: Only Cloud Functions can create XP history (prevents fake entries)
-        // Users cannot create their own XP history - must go through awardXP Cloud Function
         allow create: if false;
 
         // No updates allowed - XP history is immutable
@@ -280,7 +278,6 @@ service cloud.firestore {
         allow read: if isSignedIn();
 
         // 🔒 SECURITY: Only Cloud Functions can create/update badges (prevents fake badges)
-        // Badges are automatically unlocked by awardXP Cloud Function
         allow create, update: if false;
 
         // Only admins can delete badges
@@ -306,8 +303,6 @@ service cloud.firestore {
         );
 
         // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
-        // This prevents client-side manipulation of follow relationships
-        // All follow/unfollow operations must go through secure backend
         allow write: if false;
       }
 
@@ -320,7 +315,6 @@ service cloud.firestore {
         );
 
         // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
-        // This prevents client-side manipulation of follower relationships
         allow write: if false;
       }
 
@@ -332,7 +326,7 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       SPOTS COLLECTION
+       SPOTS COLLECTION (OLD STABLE RULES + VERIFICATION ENHANCEMENTS)
     ========================================================== */
     match /spots/{spotId} {
 
@@ -347,20 +341,27 @@ service cloud.firestore {
          resource.data.active == true ||
          (resource.data.isActive == true &&
           resource.data.isVerified == true &&
-          resource.data.isPublic == true));
+          resource.data.isPublic == true) ||
+         // Allow reading approved/auto-approved spots from verification system
+         resource.data.get('verificationStatus', '') in ['AUTO_APPROVED', 'APPROVED']);
 
       allow create: if isSignedIn();
 
       allow update: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          resource.data.get('createdBy', '') == request.auth.uid ||
-         resource.data.get('userId', '') == request.auth.uid || // NEW: Also check userId field
+         resource.data.get('userId', '') == request.auth.uid ||
          (isSponsor(request.auth.uid) &&
           resource.data.keys().hasAny(['sponsorId']) &&
           canAccessSponsor(request.auth.uid, resource.data.sponsorId))) &&
-        // 🔒 CRITICAL SECURITY: Prevent direct modification of like count
-        // Like count can only be updated by Cloud Functions
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['likeCount']));
+        // 🔒 CRITICAL SECURITY: Prevent direct modification of like count and verification data
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'likeCount',
+          'verificationStatus',
+          'verificationScore',
+          'verificationFlags',
+          'xpReleased'
+        ]));
 
       allow delete: if isSuperAdmin(request.auth.uid);
 
@@ -372,8 +373,6 @@ service cloud.firestore {
            resource.data.get('active', false) == true);
 
         // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
-        // This prevents client-side manipulation of like counts
-        // All like/unlike operations must go through secure backend
         allow write: if false;
       }
 
@@ -386,7 +385,30 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       DISCOVERIES COLLECTION (NEW - for user profile viewing)
+       NEW: SPOT REPORTS (FROM NEW RULES)
+    ========================================================== */
+    match /spotReports/{reportId} {
+      // Users can read their own reports, admins can read all
+      allow read: if isSignedIn() && (
+        resource.data.get('reportedBy', '') == request.auth.uid ||
+        isAdmin(request.auth.uid)
+      );
+
+      // Users can create reports with validation
+      allow create: if isSignedIn() &&
+        request.resource.data.reportedBy == request.auth.uid &&
+        request.resource.data.get('reason', '') in ['FAKE', 'WRONG_LOCATION', 'SPAM', 'OFFENSIVE', 'DANGEROUS', 'DUPLICATE'] &&
+        request.resource.data.get('status', '') == 'PENDING';
+
+      // Only admins can update reports (for review/resolution)
+      allow update: if isAdmin(request.auth.uid);
+
+      // No one can delete reports (audit trail)
+      allow delete: if false;
+    }
+
+    /* =========================================================
+       DISCOVERIES COLLECTION (OLD STABLE RULES)
     ========================================================== */
     match /discoveries/{discoveryId} {
       allow read: if isSignedIn();
@@ -396,7 +418,7 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       CHALLENGES / ACHIEVEMENTS / BADGES (ROOT COLLECTIONS)
+       CHALLENGES / ACHIEVEMENTS / BADGES (OLD STABLE RULES)
     ========================================================== */
     match /challenges/{challengeId} {
       allow read: if isSignedIn();
@@ -414,26 +436,22 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       SPONSORS COLLECTION
+       SPONSORS COLLECTION (OLD STABLE RULES)
     ========================================================== */
     match /sponsors/{sponsorId} {
 
-      // Read permissions:
-      // - Admins can read all sponsors
-      // - Sponsor owners can read their own sponsor (via sponsorId match or document userId/ownerUserId)
-      // - ALL authenticated users can read any sponsor (public business info)
-      // Note: Sponsors are public businesses, so all users should see sponsor details
+      // All authenticated users can read sponsors (public business info)
       allow read: if isSignedIn();
 
       allow create: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
-         // Allow self-registration: user creating their own sponsor profile (trial or pending)
+         // Allow self-registration
          (sponsorId == request.auth.uid &&
           request.resource.data.keys().hasAny(['userId', 'ownerUserId']) &&
           (request.resource.data.userId == request.auth.uid ||
            request.resource.data.ownerUserId == request.auth.uid) &&
           request.resource.data.status in ['active', 'pending'])) &&
-        // NEW: Validate category fields
+        // Validate category fields
         (request.resource.data.keys().hasAny(['primaryCategory']) ?
           isValidSponsorCategory(request.resource.data.primaryCategory) : true) &&
         (request.resource.data.keys().hasAny(['secondaryCategories']) ?
@@ -459,7 +477,7 @@ service cloud.firestore {
               'ownerUserId',
               'userId'
             ]))) &&
-        // NEW: Validate category changes
+        // Validate category changes
         (request.resource.data.diff(resource.data).affectedKeys().hasAny(['primaryCategory']) ?
           isValidSponsorCategory(request.resource.data.primaryCategory) : true) &&
         (request.resource.data.diff(resource.data).affectedKeys().hasAny(['secondaryCategories']) ?
@@ -483,7 +501,7 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       REWARDS COLLECTION
+       REWARDS COLLECTION (OLD STABLE RULES)
     ========================================================== */
     match /rewards/{rewardId} {
 
@@ -495,18 +513,16 @@ service cloud.firestore {
           canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
 
       // CRITICAL SECURITY: Only allow reward creation via Cloud Functions or Admin
-      // This prevents client-side bypass of subscription limits
       allow create: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          // Cloud Functions have special token for bypass
          (request.auth.token != null &&
           request.auth.token.aud == "project-mysterispot-ef091" &&
           request.auth.token.iss == "firebase-adminsdk") ||
-         // Temporary fallback - TO BE REMOVED after Cloud Function deployment
+         // Temporary fallback
          (isSponsor(request.auth.uid) &&
           request.resource.data.keys().hasAny(['sponsorId', 'createdBy']) &&
           canAccessSponsor(request.auth.uid, request.resource.data.sponsorId) &&
-          // Additional security: require createdBy field to match auth uid
           request.resource.data.createdBy == request.auth.uid));
 
       allow update: if isSignedIn() &&
@@ -526,7 +542,7 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       REWARD REDEMPTIONS (ROOT COLLECTION)
+       REWARD REDEMPTIONS (OLD STABLE RULES)
     ========================================================== */
     match /rewardRedemptions/{redemptionId} {
 
@@ -550,65 +566,153 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       USER SPOTS (ROOT COLLECTION) - Spot Discovery Tracking
+       USER SPOTS / VISITS / CHALLENGES (OLD STABLE RULES)
     ========================================================== */
     match /user_spots/{discoveryId} {
-
       allow read: if isSignedIn();
-
       allow create: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          (request.resource.data.userId == request.auth.uid &&
           request.resource.id == request.resource.data.userId + '_' + request.resource.data.spotId));
-
       allow update: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          (resource.data.userId == request.auth.uid &&
           request.resource.data.userId == request.auth.uid));
-
       allow delete: if isSignedIn() && isAdmin(request.auth.uid);
     }
 
-    /* =========================================================
-       USER VISITS (ROOT COLLECTION) - Visit History Tracking
-    ========================================================== */
     match /user_visits/{visitId} {
-
       allow read: if isSignedIn();
-
       allow create: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          request.resource.data.userId == request.auth.uid);
-
       allow update: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          (resource.data.userId == request.auth.uid &&
           request.resource.data.userId == request.auth.uid));
-
       allow delete: if isSignedIn() && isAdmin(request.auth.uid);
     }
 
-    /* =========================================================
-       USER CHALLENGES (ROOT COLLECTION) - Challenge Progress
-    ========================================================== */
     match /user_challenges/{challengeId} {
-
       allow read: if isSignedIn();
-
       allow create: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          request.resource.data.userId == request.auth.uid);
-
       allow update: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          (resource.data.userId == request.auth.uid &&
           request.resource.data.userId == request.auth.uid));
-
       allow delete: if isSignedIn() && isAdmin(request.auth.uid);
     }
 
     /* =========================================================
-       ANALYTICS (READ ONLY)
+       NEW: XP TRANSACTIONS (FROM NEW RULES)
+    ========================================================== */
+    match /xpTransactions/{transactionId} {
+      // Users can read their own XP history, admins can read all
+      allow read: if isSignedIn() && (
+        resource.data.get('userId', '') == request.auth.uid ||
+        isAdmin(request.auth.uid)
+      );
+
+      // Only system/cloud functions can create XP transactions
+      allow create: if false; // XP managed via Cloud Functions only
+
+      // No updates allowed (immutable audit trail)
+      allow update: if false;
+
+      // No deletions allowed (audit trail)
+      allow delete: if false;
+    }
+
+    /* =========================================================
+       NEW: VERIFICATION LOGS (FROM NEW RULES)
+    ========================================================== */
+    match /verificationLogs/{logId} {
+      // Only admins can read verification logs
+      allow read: if isAdmin(request.auth.uid);
+
+      // Only system can create logs
+      allow create: if false; // Created via Cloud Functions only
+
+      // No updates or deletes (immutable audit trail)
+      allow update, delete: if false;
+    }
+
+    /* =========================================================
+       NEW: ADMIN NOTIFICATIONS (FROM NEW RULES)
+    ========================================================== */
+    match /adminNotifications/{notificationId} {
+      // Only admins can read notifications
+      allow read: if isAdmin(request.auth.uid);
+
+      // Only system/cloud functions can create notifications
+      allow create: if false; // Created via Cloud Functions only
+
+      // Admins can update to mark as read/resolved
+      allow update: if isAdmin(request.auth.uid) &&
+        request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly(['status', 'resolvedBy', 'resolvedAt']);
+
+      // Super admins can delete old notifications
+      allow delete: if isSuperAdmin(request.auth.uid);
+    }
+
+    /* =========================================================
+       NEW: TRUST SCORE HISTORY (FROM NEW RULES)
+    ========================================================== */
+    match /trustScoreHistory/{historyId} {
+      // Users can read their own trust history, admins can read all
+      allow read: if isSignedIn() && (
+        resource.data.get('userId', '') == request.auth.uid ||
+        isAdmin(request.auth.uid)
+      );
+
+      // Only system can create trust score entries
+      allow create: if false; // Created via Cloud Functions only
+
+      // No updates or deletes (immutable audit trail)
+      allow update, delete: if false;
+    }
+
+    /* =========================================================
+       NEW: USER WARNINGS (FROM NEW RULES)
+    ========================================================== */
+    match /userWarnings/{warningId} {
+      // Users can read their own warnings, admins can read all
+      allow read: if isSignedIn() && (
+        resource.data.get('userId', '') == request.auth.uid ||
+        isAdmin(request.auth.uid)
+      );
+
+      // Only admins can create warnings
+      allow create: if isAdmin(request.auth.uid) &&
+        request.resource.data.issuedBy == request.auth.uid;
+
+      // Only admins can update warnings
+      allow update: if isAdmin(request.auth.uid);
+
+      // Only super admins can delete warnings
+      allow delete: if isSuperAdmin(request.auth.uid);
+    }
+
+    /* =========================================================
+       NEW: ADMIN ACTION LOGS (FROM NEW RULES)
+    ========================================================== */
+    match /adminActionLogs/{logId} {
+      // Only admins can read action logs
+      allow read: if isAdmin(request.auth.uid);
+
+      // Only system can create logs
+      allow create: if false; // Created via Cloud Functions only
+
+      // No updates or deletes (immutable audit trail)
+      allow update, delete: if false;
+    }
+
+    /* =========================================================
+       ANALYTICS (OLD STABLE RULES)
     ========================================================== */
     match /userAnalytics/{uid} {
       allow read: if isSignedIn() &&
@@ -624,10 +728,9 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       NOTIFICATIONS (ROOT COLLECTION)
+       NOTIFICATIONS / RATINGS / BLOGS (OLD STABLE RULES)
     ========================================================== */
     match /notifications/{notificationId} {
-
       allow read: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          (isSponsor(request.auth.uid) &&
@@ -635,15 +738,10 @@ service cloud.firestore {
           canAccessSponsor(request.auth.uid, resource.data.targetSponsorId)));
 
       allow create, update: if isSignedIn() && isAdmin(request.auth.uid);
-
       allow delete: if isSuperAdmin(request.auth.uid);
     }
 
-    /* =========================================================
-       RATINGS (ROOT COLLECTION)
-    ========================================================== */
     match /ratings/{ratingId} {
-
       allow read: if isSignedIn() &&
         (isAdmin(request.auth.uid) ||
          (isSponsor(request.auth.uid) &&
@@ -651,17 +749,11 @@ service cloud.firestore {
           canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
 
       allow create: if isSignedIn();
-
       allow update: if isSignedIn() && isAdmin(request.auth.uid);
-
       allow delete: if isSuperAdmin(request.auth.uid);
     }
 
-    /* =========================================================
-       BLOGS COLLECTION
-    ========================================================== */
     match /blogs/{blogId} {
-
       allow read: if resource.data.published == true ||
         (isSignedIn() && isAdmin(request.auth.uid));
 
@@ -683,27 +775,20 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       XP RULES
+       XP RULES / BADGE DEFINITIONS (OLD STABLE RULES)
     ========================================================== */
     match /xpRules/{ruleId} {
-      // All authenticated users can read XP rules (needed to display XP rewards)
       allow read: if isSignedIn();
-      // Only super admins can create/update/delete XP rules
       allow write: if isSuperAdmin(request.auth.uid);
     }
 
-    /* =========================================================
-       BADGE DEFINITIONS
-    ========================================================== */
     match /badgeDefinitions/{badgeId} {
-      // All authenticated users can read badge definitions (needed to display available badges)
       allow read: if isSignedIn();
-      // Only super admins can create/update/delete badge definitions
       allow write: if isSuperAdmin(request.auth.uid);
     }
 
     /* =========================================================
-       AUDIT / BILLING LOGS (READ ONLY)
+       AUDIT / BILLING LOGS (OLD STABLE RULES)
     ========================================================== */
     match /adminLogs/{logId} {
       allow read: if isAdmin(request.auth.uid);
@@ -730,7 +815,7 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       REPORTS COLLECTION (NEW - for reporting users/content)
+       REPORTS COLLECTION (OLD STABLE RULES)
     ========================================================== */
     match /reports/{reportId} {
       allow create: if isSignedIn();
@@ -738,7 +823,7 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       ADMIN USERS COLLECTION
+       ADMIN USERS COLLECTION (OLD STABLE RULES)
     ========================================================== */
     match /adminUsers/{uid} {
       // Allow admins and super admins to read all adminUsers
@@ -755,7 +840,7 @@ service cloud.firestore {
     }
 
     /* =========================================================
-       COLLECTION GROUP QUERIES
+       COLLECTION GROUP QUERIES (OLD STABLE RULES)
     ========================================================== */
 
     // Allow sponsors to query redemptions across all users for their rewards
@@ -768,13 +853,12 @@ service cloud.firestore {
     }
 
     // Allow collection group queries for ratings subcollections
-    // Ratings are public feedback - any signed-in user can read them
     match /{path=**}/ratings/{ratingId} {
       allow read: if isSignedIn();
     }
 
     /* =========================================================
-       DEFAULT DENY
+       DEFAULT DENY (OLD STABLE RULES)
     ========================================================== */
     match /{document=**} {
       allow read, write: if false;
