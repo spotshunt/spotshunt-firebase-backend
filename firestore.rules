@@ -1,783 +1,907 @@
 rules_version = '2';
 
-service cloud.firestore {
-  match /databases/{database}/documents {
+  service cloud.firestore {
+    match /databases/{database}/documents {
 
-    /* =========================================================
-       HELPER FUNCTIONS
-    ========================================================== */
+      /* =========================================================
+         HELPER FUNCTIONS (FROM OLD STABLE RULES + ENHANCEMENTS)
+      ========================================================== */
 
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function adminUserExists(uid) {
-      return exists(/databases/$(database)/documents/adminUsers/$(uid));
-    }
-
-    function getUserRole(uid) {
-      return adminUserExists(uid)
-        ? get(/databases/$(database)/documents/adminUsers/$(uid)).data.role
-        : get(/databases/$(database)/documents/users/$(uid)).data.role;
-    }
-
-    function isSuperAdmin(uid) {
-      return isSignedIn() && (
-        (adminUserExists(uid) &&
-         get(/databases/$(database)/documents/adminUsers/$(uid)).data.role == 'SUPER_ADMIN' &&
-         get(/databases/$(database)/documents/adminUsers/$(uid)).data.isActive == true) ||
-        getUserRole(uid) == 'superadmin'
-      );
-    }
-
-    function isAdmin(uid) {
-      return isSignedIn() && (
-        (adminUserExists(uid) &&
-         get(/databases/$(database)/documents/adminUsers/$(uid)).data.role in ['ADMIN', 'SUPER_ADMIN'] &&
-         get(/databases/$(database)/documents/adminUsers/$(uid)).data.isActive == true) ||
-        getUserRole(uid) in ['admin', 'superadmin']
-      );
-    }
-
-    function isSponsor(uid) {
-      return isSignedIn() && (
-        (adminUserExists(uid) &&
-         get(/databases/$(database)/documents/adminUsers/$(uid)).data.role == 'SPONSOR' &&
-         get(/databases/$(database)/documents/adminUsers/$(uid)).data.isActive == true) ||
-        getUserRole(uid) == 'sponsor'
-      );
-    }
-
-    function getSponsorId(uid) {
-      return adminUserExists(uid)
-        ? get(/databases/$(database)/documents/adminUsers/$(uid)).data.sponsorId
-        : get(/databases/$(database)/documents/users/$(uid)).data.sponsorId;
-    }
-
-    function canAccessSponsor(uid, sponsorId) {
-      return isAdmin(uid) || (isSponsor(uid) && getSponsorId(uid) == sponsorId);
-    }
-
-    function isValidAdmin(uid) {
-      return adminUserExists(uid)
-        ? (get(/databases/$(database)/documents/adminUsers/$(uid)).data.role in ['SUPER_ADMIN', 'ADMIN', 'SPONSOR'] &&
-           get(/databases/$(database)/documents/adminUsers/$(uid)).data.isActive == true)
-        : (exists(/databases/$(database)/documents/users/$(uid)) &&
-           get(/databases/$(database)/documents/users/$(uid)).data.role in ['admin', 'superadmin', 'sponsor']);
-    }
-
-    // NEW: Helper function for public profile viewing
-    function isPublicProfile(userId) {
-      let userDoc = get(/databases/$(database)/documents/users/$(userId));
-      return userDoc != null &&
-             userDoc.data != null &&
-             userDoc.data.get('isPublic', false) == true;
-    }
-
-    // NEW: Helper function to validate sponsor category
-    // Only allow predefined category IDs from the authoritative list
-    function isValidSponsorCategory(categoryId) {
-      return categoryId in [
-        'cafe',
-        'restaurant',
-        'hotel',
-        'bakery',
-        'bar_pub',
-        'grocery',
-        'supermarket',
-        'gym_fitness',
-        'salon_spa',
-        'clinic_pharmacy',
-        'coworking',
-        'shopping',
-        'electronics',
-        'education',
-        'entertainment',
-        'travel',
-        'other'
-      ];
-    }
-
-    // NEW: Validate secondary categories array
-    function areValidSecondaryCategories(categories) {
-      return categories is list &&
-             categories.size() <= 5 && // Max 5 secondary categories
-             categories.toSet().hasAll(
-               categories.toSet().intersection([
-                 'cafe', 'restaurant', 'hotel', 'bakery', 'bar_pub',
-                 'grocery', 'supermarket', 'gym_fitness', 'salon_spa',
-                 'clinic_pharmacy', 'coworking', 'shopping', 'electronics',
-                 'education', 'entertainment', 'travel', 'other'
-               ].toSet())
-             );
-    }
-
-    /* =========================================================
-       USERS COLLECTION
-    ========================================================== */
-    match /users/{userId} {
-
-      // Read own profile, admin access, active user profiles (for leaderboard), OR public profiles
-      allow read: if isSignedIn() &&
-        (request.auth.uid == userId ||
-         isAdmin(request.auth.uid) ||
-         resource.data.get('isActive', false) == true ||
-         resource.data.get('active', false) == true ||
-         resource.data.get('isPublic', false) == true);
-
-      // User self-creation or admin creation
-      allow create: if (
-        // Admin script setup
-        request.auth == null &&
-        request.resource.data.keys().hasAny(['setupBy']) &&
-        request.resource.data.setupBy == 'admin-script'
-      ) || (
-        // User self-registration
-        isSignedIn() &&
-        request.auth.uid == userId &&
-        request.resource.data.role == 'user'
-      ) || (
-        // Sponsor self-registration
-        isSignedIn() &&
-        request.auth.uid == userId &&
-        request.resource.data.role == 'sponsor' &&
-        request.resource.data.keys().hasAll(['email', 'role', 'sponsorId'])
-      ) || (
-        // Admin creation
-        isSignedIn() &&
-        ((isSuperAdmin(request.auth.uid)) ||
-         (isAdmin(request.auth.uid) && request.resource.data.role in ['sponsor', 'user'])) &&
-        request.resource.data.keys().hasAll(['email', 'role']) &&
-        request.resource.data.role in ['superadmin', 'admin', 'sponsor', 'user'] &&
-        (request.resource.data.role != 'sponsor' || request.resource.data.keys().hasAll(['sponsorId']))
-      );
-
-      // User self-update (BLOCK XP/level/badge modifications - only Cloud Functions can update these)
-      allow update: if isSignedIn() &&
-        (isSuperAdmin(request.auth.uid) ||
-         (isAdmin(request.auth.uid) &&
-          resource.data.role in ['sponsor', 'user'] &&
-          request.resource.data.role in ['sponsor', 'user']) ||
-         (request.auth.uid == userId &&
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'role',
-            'sponsorId',
-            'permissions',
-            'setupBy',
-            'xp',                    // 🔒 XP can only be modified by Cloud Functions
-            'level',                 // 🔒 Level calculated server-side
-            'spotsDiscovered',       // 🔒 Tracked server-side
-            'challengesCompleted',   // 🔒 Tracked server-side
-            'rank'                   // 🔒 Calculated server-side
-          ])));
-
-      // Only super admin can delete users
-      allow delete: if isSuperAdmin(request.auth.uid);
-
-      /* ---------------- USER NOTIFICATIONS ---------------- */
-      match /notifications/{notificationId} {
-        allow read: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-
-        allow update: if isSignedIn() &&
-          request.auth.uid == userId &&
-          request.resource.data.diff(resource.data)
-            .affectedKeys().hasOnly(['read']) &&
-          request.resource.data.read is bool;
-
-        // Only backend via Admin SDK can create notifications (prevents spam/abuse)
-        // Cloud Functions have admin privileges and can write here
-        allow create: if false;
-
-        allow delete: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
+      function isSignedIn() {
+        return request.auth != null;
       }
 
-      /* ---------------- USER UNLOCKED SPOTS ---------------- */
-      match /unlocked_spots/{spotDiscoveryId} {
-        allow read: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-
-        allow create: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-
-        allow update: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-
-        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+      function adminUserExists(uid) {
+        return exists(/databases/$(database)/documents/adminUsers/$(uid));
       }
 
-      /* ---------------- USER CHALLENGES (SUBCOLLECTION) ---------------- */
-      match /challenges/{challengeId} {
-        // Allow reading for: owner, admin, or any authenticated user (gamification data)
-        allow read: if isSignedIn();
-
-        allow create: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-
-        allow update: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-
-        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+      function getUserRole(uid) {
+        return adminUserExists(uid)
+          ? get(/databases/$(database)/documents/adminUsers/$(uid)).data.role
+          : get(/databases/$(database)/documents/users/$(uid)).data.role;
       }
 
-      /* ---------------- USER REDEMPTIONS ---------------- */
-      match /redemptions/{redemptionId} {
+      function isSuperAdmin(uid) {
+        return isSignedIn() && (
+          (adminUserExists(uid) &&
+           get(/databases/$(database)/documents/adminUsers/$(uid)).data.role == 'SUPER_ADMIN' &&
+           get(/databases/$(database)/documents/adminUsers/$(uid)).data.isActive == true) ||
+          getUserRole(uid) == 'superadmin'
+        );
+      }
+
+      function isAdmin(uid) {
+        return isSignedIn() && (
+          (adminUserExists(uid) &&
+           get(/databases/$(database)/documents/adminUsers/$(uid)).data.role in ['ADMIN', 'SUPER_ADMIN'] &&
+           get(/databases/$(database)/documents/adminUsers/$(uid)).data.isActive == true) ||
+          getUserRole(uid) in ['admin', 'superadmin']
+        );
+      }
+
+      function isSponsor(uid) {
+        return isSignedIn() && (
+          (adminUserExists(uid) &&
+           get(/databases/$(database)/documents/adminUsers/$(uid)).data.role == 'SPONSOR' &&
+           get(/databases/$(database)/documents/adminUsers/$(uid)).data.isActive == true) ||
+          getUserRole(uid) == 'sponsor'
+        );
+      }
+
+      function getSponsorId(uid) {
+        return adminUserExists(uid)
+          ? get(/databases/$(database)/documents/adminUsers/$(uid)).data.sponsorId
+          : get(/databases/$(database)/documents/users/$(uid)).data.sponsorId;
+      }
+
+      function canAccessSponsor(uid, sponsorId) {
+        return isAdmin(uid) || (isSponsor(uid) && getSponsorId(uid) == sponsorId);
+      }
+
+      function isValidAdmin(uid) {
+        return adminUserExists(uid)
+          ? (get(/databases/$(database)/documents/adminUsers/$(uid)).data.role in ['SUPER_ADMIN', 'ADMIN', 'SPONSOR'] &&
+             get(/databases/$(database)/documents/adminUsers/$(uid)).data.isActive == true)
+          : (exists(/databases/$(database)/documents/users/$(uid)) &&
+             get(/databases/$(database)/documents/users/$(uid)).data.role in ['admin', 'superadmin', 'sponsor']);
+      }
+
+      // Helper function for public profile viewing
+      function isPublicProfile(userId) {
+        let userDoc = get(/databases/$(database)/documents/users/$(userId));
+        return userDoc != null &&
+               userDoc.data != null &&
+               userDoc.data.get('isPublic', false) == true;
+      }
+
+      // Helper function to validate sponsor category
+      function isValidSponsorCategory(categoryId) {
+        return categoryId in [
+          'cafe',
+          'restaurant',
+          'hotel',
+          'bakery',
+          'bar_pub',
+          'grocery',
+          'supermarket',
+          'gym_fitness',
+          'salon_spa',
+          'clinic_pharmacy',
+          'coworking',
+          'shopping',
+          'electronics',
+          'education',
+          'entertainment',
+          'travel',
+          'other'
+        ];
+      }
+
+      // Validate secondary categories array
+      function areValidSecondaryCategories(categories) {
+        return categories is list &&
+               categories.size() <= 5 && // Max 5 secondary categories
+               categories.toSet().hasAll(
+                 categories.toSet().intersection([
+                   'cafe', 'restaurant', 'hotel', 'bakery', 'bar_pub',
+                   'grocery', 'supermarket', 'gym_fitness', 'salon_spa',
+                   'clinic_pharmacy', 'coworking', 'shopping', 'electronics',
+                   'education', 'entertainment', 'travel', 'other'
+                 ].toSet())
+               );
+      }
+
+      /* =========================================================
+         🆕 SPOT VERIFICATION HELPER FUNCTIONS
+      ========================================================== */
+
+      // Validate spot creation with verification system requirements
+      function validSpotCreation() {
+        let data = request.resource.data;
+        return data.createdBy == request.auth.uid &&
+               (data.verificationStatus == 'PENDING' || !('verificationStatus' in data)) &&
+               (!('verificationScore' in data) || (data.verificationScore is int && data.verificationScore >= 0 && data.verificationScore <= 100)) &&
+               (!('xpReleased' in data) || data.xpReleased == false) &&
+               (!('xpPending' in data) || (data.xpPending is int && data.xpPending >= 0)) &&
+               (!('verificationReasons' in data) || data.verificationReasons is list) &&
+               (!('verificationFlags' in data) || data.verificationFlags is list) &&
+               (!('locationMetadata' in data) || data.locationMetadata is map) &&
+               validSpotData(data);
+      }
+
+      function basicSpotCreation() {
+        let data = request.resource.data;
+        return data.createdBy == request.auth.uid &&
+               data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+               data.description is string && data.description.size() <= 500 &&
+               data.category in ['CAFE', 'VIEWPOINT', 'ART', 'PARK', 'HISTORICAL', 'HIDDEN_GEM', 'NATURE'] &&
+               data.latitude is number && data.latitude >= -90 && data.latitude <= 90 &&
+               data.longitude is number && data.longitude >= -180 && data.longitude <= 180;
+      }
+
+      // Validate basic spot data requirements (only check critical fields)
+      function validSpotData(data) {
+        return data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+               data.description is string && data.description.size() <= 500 &&
+               data.category in ['CAFE', 'VIEWPOINT', 'ART', 'PARK', 'HISTORICAL', 'HIDDEN_GEM', 'NATURE'] &&
+               data.latitude is number && data.latitude >= -90 && data.latitude <= 90 &&
+               data.longitude is number && data.longitude >= -180 && data.longitude <= 180;
+               // Note: All other FirebaseSpot fields (xpReward, geohash, etc.) are allowed by default
+      }
+
+      /* =========================================================
+         USERS COLLECTION (OLD STABLE RULES)
+      ========================================================== */
+      match /users/{userId} {
+
+        // Read own profile, admin access, active user profiles (for leaderboard), OR public profiles
         allow read: if isSignedIn() &&
           (request.auth.uid == userId ||
            isAdmin(request.auth.uid) ||
-           // Allow sponsors to read redemptions for their own rewards
+           resource.data.get('isActive', false) == true ||
+           resource.data.get('active', false) == true ||
+           resource.data.get('isPublic', false) == true);
+
+        // User self-creation or admin creation
+        allow create: if (
+          // Admin script setup
+          request.auth == null &&
+          request.resource.data.keys().hasAny(['setupBy']) &&
+          request.resource.data.setupBy == 'admin-script'
+        ) || (
+          // User self-registration
+          isSignedIn() &&
+          request.auth.uid == userId &&
+          request.resource.data.role == 'user'
+        ) || (
+          // Sponsor self-registration
+          isSignedIn() &&
+          request.auth.uid == userId &&
+          request.resource.data.role == 'sponsor' &&
+          request.resource.data.keys().hasAll(['email', 'role', 'sponsorId'])
+        ) || (
+          // Admin creation
+          isSignedIn() &&
+          ((isSuperAdmin(request.auth.uid)) ||
+           (isAdmin(request.auth.uid) && request.resource.data.role in ['sponsor', 'user'])) &&
+          request.resource.data.keys().hasAll(['email', 'role']) &&
+          request.resource.data.role in ['superadmin', 'admin', 'sponsor', 'user'] &&
+          (request.resource.data.role != 'sponsor' || request.resource.data.keys().hasAll(['sponsorId']))
+        );
+
+        // User self-update (BLOCK XP/level/badge modifications - only Cloud Functions can update these)
+        allow update: if isSignedIn() &&
+          (isSuperAdmin(request.auth.uid) ||
+           (isAdmin(request.auth.uid) &&
+            resource.data.role in ['sponsor', 'user'] &&
+            request.resource.data.role in ['sponsor', 'user']) ||
+           (request.auth.uid == userId &&
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+              'role',
+              'sponsorId',
+              'permissions',
+              'setupBy',
+              'xp',                    // 🔒 XP can only be modified by Cloud Functions
+              'level',                 // 🔒 Level calculated server-side
+              'spotsDiscovered',       // 🔒 Tracked server-side
+              'challengesCompleted',   // 🔒 Tracked server-side
+              'rank',                  // 🔒 Calculated server-side
+              'trustScore'             // 🔒 Trust score managed by system only
+            ])));
+
+        // Only super admin can delete users
+        allow delete: if isSuperAdmin(request.auth.uid);
+
+        /* ---------------- USER NOTIFICATIONS ---------------- */
+        match /notifications/{notificationId} {
+          allow read: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+
+          allow update: if isSignedIn() &&
+            request.auth.uid == userId &&
+            request.resource.data.diff(resource.data)
+              .affectedKeys().hasOnly(['read']) &&
+            request.resource.data.read is bool;
+
+          // Only backend via Admin SDK can create notifications (prevents spam/abuse)
+          allow create: if false;
+
+          allow delete: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+        }
+
+        /* ---------------- USER UNLOCKED SPOTS ---------------- */
+        match /unlocked_spots/{spotDiscoveryId} {
+          allow read: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+
+          allow create: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+
+          allow update: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+
+          allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        }
+
+        /* ---------------- USER CHALLENGES (SUBCOLLECTION) ---------------- */
+        match /challenges/{challengeId} {
+          // Allow reading for: owner, admin, or any authenticated user (gamification data)
+          allow read: if isSignedIn();
+
+          allow create: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+
+          allow update: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+
+          allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        }
+
+        /* ---------------- USER REDEMPTIONS ---------------- */
+        match /redemptions/{redemptionId} {
+          allow read: if isSignedIn() &&
+            (request.auth.uid == userId ||
+             isAdmin(request.auth.uid) ||
+             // Allow sponsors to read redemptions for their own rewards
+             (isSponsor(request.auth.uid) &&
+              resource.data.keys().hasAny(['sponsorId']) &&
+              canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
+
+          allow create: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+
+          allow update: if isSignedIn() &&
+            (request.auth.uid == userId ||
+             isAdmin(request.auth.uid) ||
+             // Allow sponsors to mark their own reward redemptions as used
+             (isSponsor(request.auth.uid) &&
+              resource.data.keys().hasAny(['sponsorId']) &&
+              canAccessSponsor(request.auth.uid, resource.data.sponsorId) &&
+              // Security: Only allow updating 'used' and 'usedAt' fields
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedAt'])));
+
+          allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        }
+
+        /* ---------------- USER XP HISTORY (SUBCOLLECTION) ---------------- */
+        match /xpHistory/{historyId} {
+          // Users can read their own XP history
+          allow read: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+
+          // 🔒 SECURITY: Only Cloud Functions can create XP history (prevents fake entries)
+          allow create: if false;
+
+          // No updates allowed - XP history is immutable
+          allow update: if false;
+
+          // Only admins can delete XP history
+          allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        }
+
+        /* ---------------- USER ACHIEVEMENTS (SUBCOLLECTION) ---------------- */
+        match /achievements/{achievementId} {
+          // Allow reading for: owner, admin, or any authenticated user (gamification data)
+          allow read: if isSignedIn();
+
+          allow write: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+          allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        }
+
+        /* ---------------- USER BADGES (SUBCOLLECTION) ---------------- */
+        match /badges/{badgeId} {
+          // Allow reading for: owner, admin, or any authenticated user (gamification data)
+          allow read: if isSignedIn();
+
+          // 🔒 SECURITY: Only Cloud Functions can create/update badges (prevents fake badges)
+          allow create, update: if false;
+
+          // Only admins can delete badges
+          allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        }
+
+        /* ---------------- USER ACTIVITIES (SUBCOLLECTION) ---------------- */
+        match /activities/{activityId} {
+          allow read: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+          allow write: if isSignedIn() &&
+            (request.auth.uid == userId || isAdmin(request.auth.uid));
+          allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        }
+
+        /* ---------------- USER FOLLOWING/FOLLOWERS (SOCIAL FEATURES) ---------------- */
+        match /following/{targetUserId} {
+          // Users can read their own following list, or public profiles
+          allow read: if isSignedIn() && (
+            request.auth.uid == userId ||
+            isAdmin(request.auth.uid) ||
+            isPublicProfile(userId)
+          );
+
+          // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
+          allow write: if false;
+        }
+
+        match /followers/{followerId} {
+          // Users can read their own followers list, or public profiles
+          allow read: if isSignedIn() && (
+            request.auth.uid == userId ||
+            isAdmin(request.auth.uid) ||
+            isPublicProfile(userId)
+          );
+
+          // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
+          allow write: if false;
+        }
+
+        /* ---------------- CATCHALL FOR OTHER USER SUBCOLLECTIONS ---------------- */
+        // Allow admins to delete any subcollection for complete user deletion
+        match /{subcollection}/{documentId} {
+          allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        }
+      }
+
+      /* =========================================================
+         SPOTS COLLECTION (🆕 UPDATED WITH VERIFICATION)
+      ========================================================== */
+      match /spots/{spotId} {
+
+        allow read: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           resource.data.get('createdBy', '') == request.auth.uid ||
+           resource.data.get('userId', '') == request.auth.uid ||
+           (isSponsor(request.auth.uid) &&
+            resource.data.keys().hasAny(['sponsorId']) &&
+            canAccessSponsor(request.auth.uid, resource.data.sponsorId)) ||
+           resource.data.isActive == true ||
+           resource.data.active == true ||
+           (resource.data.isActive == true &&
+            resource.data.isVerified == true &&
+            resource.data.isPublic == true) ||
+           // Allow reading approved/auto-approved spots from verification system
+           resource.data.get('verificationStatus', '') in ['AUTO_APPROVED', 'APPROVED']);
+
+        // 🆕 UPDATED: Use verification validation for spot creation
+        allow create: if isSignedIn() && (validSpotCreation() || basicSpotCreation());
+
+         allow update: if isSignedIn() &&
+    (isAdmin(request.auth.uid) ||
+     resource.data.get('createdBy', '') == request.auth.uid ||
+     resource.data.get('userId', '') == request.auth.uid ||
+     (isSponsor(request.auth.uid) &&
+      resource.data.keys().hasAny(['sponsorId']) &&
+      canAccessSponsor(request.auth.uid, resource.data.sponsorId))) &&
+    // 🔒 SECURITY: Prevent non-admin users from modifying verification data
+    (isAdmin(request.auth.uid) ||
+     !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+       'likeCount',
+       'verificationStatus',
+       'verificationScore',
+       'verificationFlags',
+       'xpReleased'
+     ]));
+
+        allow delete: if isSuperAdmin(request.auth.uid);
+
+        /* ---------------- SPOT LIKES (SOCIAL FEATURES) ---------------- */
+        match /likes/{userId} {
+          // Users can read likes to see who liked a spot
+          allow read: if isSignedIn() &&
+            (resource.data.get('isActive', false) == true ||
+             resource.data.get('active', false) == true);
+
+          // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
+          allow write: if false;
+        }
+
+        match /ratings/{uid} {
+          allow read: if isSignedIn();
+          allow create, update: if isSignedIn() && request.auth.uid == uid;
+          allow delete: if isSignedIn() &&
+            (request.auth.uid == uid || isAdmin(request.auth.uid));
+        }
+      }
+
+      /* =========================================================
+         NEW: SPOT REPORTS (FROM NEW RULES)
+      ========================================================== */
+      match /spotReports/{reportId} {
+        // Users can read their own reports, admins can read all
+        allow read: if isSignedIn() && (
+          resource.data.get('reportedBy', '') == request.auth.uid ||
+          isAdmin(request.auth.uid)
+        );
+
+        // Users can create reports with validation
+        allow create: if isSignedIn() &&
+          request.resource.data.reportedBy == request.auth.uid &&
+          request.resource.data.get('reason', '') in ['FAKE', 'WRONG_LOCATION', 'SPAM', 'OFFENSIVE', 'DANGEROUS', 'DUPLICATE'] &&
+          request.resource.data.get('status', '') == 'PENDING';
+
+        // Only admins can update reports (for review/resolution)
+        allow update: if isAdmin(request.auth.uid);
+
+        // No one can delete reports (audit trail)
+        allow delete: if false;
+      }
+
+      /* =========================================================
+         DISCOVERIES COLLECTION (OLD STABLE RULES)
+      ========================================================== */
+      match /discoveries/{discoveryId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow delete: if false; // Don't allow deletion for data integrity
+      }
+
+      /* =========================================================
+         CHALLENGES / ACHIEVEMENTS / BADGES (OLD STABLE RULES)
+      ========================================================== */
+      match /challenges/{challengeId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin(request.auth.uid);
+      }
+
+      match /achievements/{achievementId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin(request.auth.uid);
+      }
+
+      match /badges/{badgeId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin(request.auth.uid);
+      }
+
+      /* =========================================================
+         SPONSORS COLLECTION (OLD STABLE RULES)
+      ========================================================== */
+      match /sponsors/{sponsorId} {
+
+        // All authenticated users can read sponsors (public business info)
+        allow read: if isSignedIn();
+
+        allow create: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           // Allow self-registration
+           (sponsorId == request.auth.uid &&
+            request.resource.data.keys().hasAny(['userId', 'ownerUserId']) &&
+            (request.resource.data.userId == request.auth.uid ||
+             request.resource.data.ownerUserId == request.auth.uid) &&
+            request.resource.data.status in ['active', 'pending'])) &&
+          // Validate category fields
+          (request.resource.data.keys().hasAny(['primaryCategory']) ?
+            isValidSponsorCategory(request.resource.data.primaryCategory) : true) &&
+          (request.resource.data.keys().hasAny(['secondaryCategories']) ?
+            areValidSecondaryCategories(request.resource.data.secondaryCategories) : true);
+
+        // Billing field protection + Category validation
+        allow update: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (isSponsor(request.auth.uid) &&
+            canAccessSponsor(request.auth.uid, sponsorId) &&
+            !request.resource.data.diff(resource.data)
+              .affectedKeys()
+              .hasAny([
+                'subscriptionPlan',
+                'subscriptionStatus',
+                'stripeCustomerId',
+                'stripeSubscriptionId',
+                'planRenewalDate',
+                'trialEndsAt',
+                'hasUsedTrial',
+                'paymentFailureCount',
+                'lastPaymentFailureAt',
+                'ownerUserId',
+                'userId'
+              ]))) &&
+          // Validate category changes
+          (request.resource.data.diff(resource.data).affectedKeys().hasAny(['primaryCategory']) ?
+            isValidSponsorCategory(request.resource.data.primaryCategory) : true) &&
+          (request.resource.data.diff(resource.data).affectedKeys().hasAny(['secondaryCategories']) ?
+            areValidSecondaryCategories(request.resource.data.secondaryCategories) : true);
+
+        allow delete: if isSuperAdmin(request.auth.uid);
+
+        match /ratings/{uid} {
+          allow read: if isSignedIn();
+          allow create, update: if isSignedIn() && request.auth.uid == uid;
+          allow delete: if isSignedIn() &&
+            (request.auth.uid == uid || isAdmin(request.auth.uid));
+        }
+
+        match /refunds/{refundId} {
+          allow read: if isSignedIn() &&
+            (canAccessSponsor(request.auth.uid, sponsorId) ||
+             isAdmin(request.auth.uid));
+          allow write: if false; // Only backend
+        }
+      }
+
+      /* =========================================================
+         REWARDS COLLECTION (OLD STABLE RULES)
+      ========================================================== */
+      match /rewards/{rewardId} {
+
+        allow read: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (resource.data.active == true) ||
            (isSponsor(request.auth.uid) &&
             resource.data.keys().hasAny(['sponsorId']) &&
             canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
 
+        // CRITICAL SECURITY: Only allow reward creation via Cloud Functions or Admin
         allow create: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
+          (isAdmin(request.auth.uid) ||
+           // Cloud Functions have special token for bypass
+           (request.auth.token != null &&
+            request.auth.token.aud == "project-mysterispot-ef091" &&
+            request.auth.token.iss == "firebase-adminsdk") ||
+           // Temporary fallback
+           (isSponsor(request.auth.uid) &&
+            request.resource.data.keys().hasAny(['sponsorId', 'createdBy']) &&
+            canAccessSponsor(request.auth.uid, request.resource.data.sponsorId) &&
+            request.resource.data.createdBy == request.auth.uid));
 
         allow update: if isSignedIn() &&
-          (request.auth.uid == userId ||
-           isAdmin(request.auth.uid) ||
-           // Allow sponsors to mark their own reward redemptions as used
+          (isAdmin(request.auth.uid) ||
+           (isSponsor(request.auth.uid) &&
+            request.resource.data.keys().hasAny(['sponsorId']) &&
+            canAccessSponsor(request.auth.uid, request.resource.data.sponsorId)) ||
+           // Allow users to increment currentRedemptions when redeeming
+           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentRedemptions'])));
+
+        // Allow sponsors to delete their own rewards OR admins to delete any reward
+        allow delete: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
            (isSponsor(request.auth.uid) &&
             resource.data.keys().hasAny(['sponsorId']) &&
-            canAccessSponsor(request.auth.uid, resource.data.sponsorId) &&
-            // Security: Only allow updating 'used' and 'usedAt' fields
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedAt'])));
+            canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
+      }
 
+      /* =========================================================
+         REWARD REDEMPTIONS (OLD STABLE RULES)
+      ========================================================== */
+      match /rewardRedemptions/{redemptionId} {
+
+        allow read: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (isSponsor(request.auth.uid) &&
+            resource.data.keys().hasAny(['sponsorId']) &&
+            canAccessSponsor(request.auth.uid, resource.data.sponsorId)) ||
+           (resource.data.keys().hasAny(['userId']) &&
+            resource.data.userId == request.auth.uid));
+
+        allow create: if isSignedIn(); // Users can redeem rewards
+
+        allow update: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (isSponsor(request.auth.uid) &&
+            resource.data.keys().hasAny(['sponsorId']) &&
+            canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
+
+        allow delete: if false; // No deletion of redemption records
+      }
+
+      /* =========================================================
+         USER SPOTS / VISITS / CHALLENGES (OLD STABLE RULES)
+      ========================================================== */
+      match /user_spots/{discoveryId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (request.resource.data.userId == request.auth.uid &&
+            request.resource.id == request.resource.data.userId + '_' + request.resource.data.spotId));
+        allow update: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (resource.data.userId == request.auth.uid &&
+            request.resource.data.userId == request.auth.uid));
         allow delete: if isSignedIn() && isAdmin(request.auth.uid);
       }
 
-      /* ---------------- USER XP HISTORY (SUBCOLLECTION) ---------------- */
-      match /xpHistory/{historyId} {
-        // Users can read their own XP history
-        allow read: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
+      match /user_visits/{visitId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           request.resource.data.userId == request.auth.uid);
+        allow update: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (resource.data.userId == request.auth.uid &&
+            request.resource.data.userId == request.auth.uid));
+        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+      }
 
-        // 🔒 SECURITY: Only Cloud Functions can create XP history (prevents fake entries)
-        // Users cannot create their own XP history - must go through awardXP Cloud Function
-        allow create: if false;
+      match /user_challenges/{challengeId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           request.resource.data.userId == request.auth.uid);
+        allow update: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (resource.data.userId == request.auth.uid &&
+            request.resource.data.userId == request.auth.uid));
+        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+      }
 
-        // No updates allowed - XP history is immutable
+      /* =========================================================
+         NEW: XP TRANSACTIONS (FROM NEW RULES)
+      ========================================================== */
+      match /xpTransactions/{transactionId} {
+        // Users can read their own XP history, admins can read all
+        allow read: if isSignedIn() && (
+          resource.data.get('userId', '') == request.auth.uid ||
+          isAdmin(request.auth.uid)
+        );
+
+        // Only system/cloud functions can create XP transactions
+        allow create: if false; // XP managed via Cloud Functions only
+
+        // No updates allowed (immutable audit trail)
         allow update: if false;
 
-        // Only admins can delete XP history
-        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+        // No deletions allowed (audit trail)
+        allow delete: if false;
       }
 
-      /* ---------------- USER ACHIEVEMENTS (SUBCOLLECTION) ---------------- */
-      match /achievements/{achievementId} {
-        // Allow reading for: owner, admin, or any authenticated user (gamification data)
-        allow read: if isSignedIn();
+      /* =========================================================
+         NEW: VERIFICATION LOGS (FROM NEW RULES)
+      ========================================================== */
+      match /verificationLogs/{logId} {
+        // Only admins can read verification logs
+        allow read: if isAdmin(request.auth.uid);
 
-        allow write: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
+         // Admins can create action logs when performing verification
+        allow create: if isAdmin(request.auth.uid);
+
+        // No updates or deletes (immutable audit trail)
+        allow update, delete: if false;
       }
 
-      /* ---------------- USER BADGES (SUBCOLLECTION) ---------------- */
-      match /badges/{badgeId} {
-        // Allow reading for: owner, admin, or any authenticated user (gamification data)
-        allow read: if isSignedIn();
+      /* =========================================================
+         NEW: ADMIN NOTIFICATIONS (FROM NEW RULES)
+      ========================================================== */
+      match /adminNotifications/{notificationId} {
+        // Only admins can read notifications
+        allow read: if isAdmin(request.auth.uid);
 
-        // 🔒 SECURITY: Only Cloud Functions can create/update badges (prevents fake badges)
-        // Badges are automatically unlocked by awardXP Cloud Function
-        allow create, update: if false;
+        // Only system/cloud functions can create notifications
+        allow create: if false; // Created via Cloud Functions only
 
-        // Only admins can delete badges
-        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
-      }
-
-      /* ---------------- USER ACTIVITIES (SUBCOLLECTION) ---------------- */
-      match /activities/{activityId} {
-        allow read: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-        allow write: if isSignedIn() &&
-          (request.auth.uid == userId || isAdmin(request.auth.uid));
-        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
-      }
-
-      /* ---------------- USER FOLLOWING/FOLLOWERS (SOCIAL FEATURES) ---------------- */
-      match /following/{targetUserId} {
-        // Users can read their own following list, or public profiles
-        allow read: if isSignedIn() && (
-          request.auth.uid == userId ||
-          isAdmin(request.auth.uid) ||
-          isPublicProfile(userId)
-        );
-
-        // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
-        // This prevents client-side manipulation of follow relationships
-        // All follow/unfollow operations must go through secure backend
-        allow write: if false;
-      }
-
-      match /followers/{followerId} {
-        // Users can read their own followers list, or public profiles
-        allow read: if isSignedIn() && (
-          request.auth.uid == userId ||
-          isAdmin(request.auth.uid) ||
-          isPublicProfile(userId)
-        );
-
-        // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
-        // This prevents client-side manipulation of follower relationships
-        allow write: if false;
-      }
-
-      /* ---------------- CATCHALL FOR OTHER USER SUBCOLLECTIONS ---------------- */
-      // Allow admins to delete any subcollection for complete user deletion
-      match /{subcollection}/{documentId} {
-        allow delete: if isSignedIn() && isAdmin(request.auth.uid);
-      }
-    }
-
-    /* =========================================================
-       SPOTS COLLECTION
-    ========================================================== */
-    match /spots/{spotId} {
-
-      allow read: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         resource.data.get('createdBy', '') == request.auth.uid ||
-         resource.data.get('userId', '') == request.auth.uid ||
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId)) ||
-         resource.data.isActive == true ||
-         resource.data.active == true ||
-         (resource.data.isActive == true &&
-          resource.data.isVerified == true &&
-          resource.data.isPublic == true));
-
-      allow create: if isSignedIn();
-
-      allow update: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         resource.data.get('createdBy', '') == request.auth.uid ||
-         resource.data.get('userId', '') == request.auth.uid || // NEW: Also check userId field
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId))) &&
-        // 🔒 CRITICAL SECURITY: Prevent direct modification of like count
-        // Like count can only be updated by Cloud Functions
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['likeCount']));
-
-      allow delete: if isSuperAdmin(request.auth.uid);
-
-      /* ---------------- SPOT LIKES (SOCIAL FEATURES) ---------------- */
-      match /likes/{userId} {
-        // Users can read likes to see who liked a spot
-        allow read: if isSignedIn() &&
-          (resource.data.get('isActive', false) == true ||
-           resource.data.get('active', false) == true);
-
-        // 🔒 CRITICAL SECURITY: Only Cloud Functions can write
-        // This prevents client-side manipulation of like counts
-        // All like/unlike operations must go through secure backend
-        allow write: if false;
-      }
-
-      match /ratings/{uid} {
-        allow read: if isSignedIn();
-        allow create, update: if isSignedIn() && request.auth.uid == uid;
-        allow delete: if isSignedIn() &&
-          (request.auth.uid == uid || isAdmin(request.auth.uid));
-      }
-    }
-
-    /* =========================================================
-       DISCOVERIES COLLECTION (NEW - for user profile viewing)
-    ========================================================== */
-    match /discoveries/{discoveryId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow delete: if false; // Don't allow deletion for data integrity
-    }
-
-    /* =========================================================
-       CHALLENGES / ACHIEVEMENTS / BADGES (ROOT COLLECTIONS)
-    ========================================================== */
-    match /challenges/{challengeId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin(request.auth.uid);
-    }
-
-    match /achievements/{achievementId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin(request.auth.uid);
-    }
-
-    match /badges/{badgeId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin(request.auth.uid);
-    }
-
-    /* =========================================================
-       SPONSORS COLLECTION
-    ========================================================== */
-    match /sponsors/{sponsorId} {
-
-      // Read permissions:
-      // - Admins can read all sponsors
-      // - Sponsor owners can read their own sponsor (via sponsorId match or document userId/ownerUserId)
-      // - ALL authenticated users can read any sponsor (public business info)
-      // Note: Sponsors are public businesses, so all users should see sponsor details
-      allow read: if isSignedIn();
-
-      allow create: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         // Allow self-registration: user creating their own sponsor profile (trial or pending)
-         (sponsorId == request.auth.uid &&
-          request.resource.data.keys().hasAny(['userId', 'ownerUserId']) &&
-          (request.resource.data.userId == request.auth.uid ||
-           request.resource.data.ownerUserId == request.auth.uid) &&
-          request.resource.data.status in ['active', 'pending'])) &&
-        // NEW: Validate category fields
-        (request.resource.data.keys().hasAny(['primaryCategory']) ?
-          isValidSponsorCategory(request.resource.data.primaryCategory) : true) &&
-        (request.resource.data.keys().hasAny(['secondaryCategories']) ?
-          areValidSecondaryCategories(request.resource.data.secondaryCategories) : true);
-
-      // Billing field protection + Category validation
-      allow update: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (isSponsor(request.auth.uid) &&
-          canAccessSponsor(request.auth.uid, sponsorId) &&
-          !request.resource.data.diff(resource.data)
+        // Admins can update to mark as read/resolved
+        allow update: if isAdmin(request.auth.uid) &&
+          request.resource.data.diff(resource.data)
             .affectedKeys()
-            .hasAny([
-              'subscriptionPlan',
-              'subscriptionStatus',
-              'stripeCustomerId',
-              'stripeSubscriptionId',
-              'planRenewalDate',
-              'trialEndsAt',
-              'hasUsedTrial',
-              'paymentFailureCount',
-              'lastPaymentFailureAt',
-              'ownerUserId',
-              'userId'
-            ]))) &&
-        // NEW: Validate category changes
-        (request.resource.data.diff(resource.data).affectedKeys().hasAny(['primaryCategory']) ?
-          isValidSponsorCategory(request.resource.data.primaryCategory) : true) &&
-        (request.resource.data.diff(resource.data).affectedKeys().hasAny(['secondaryCategories']) ?
-          areValidSecondaryCategories(request.resource.data.secondaryCategories) : true);
+            .hasOnly(['status', 'resolvedBy', 'resolvedAt']);
 
-      allow delete: if isSuperAdmin(request.auth.uid);
-
-      match /ratings/{uid} {
-        allow read: if isSignedIn();
-        allow create, update: if isSignedIn() && request.auth.uid == uid;
-        allow delete: if isSignedIn() &&
-          (request.auth.uid == uid || isAdmin(request.auth.uid));
+        // Super admins can delete old notifications
+        allow delete: if isSuperAdmin(request.auth.uid);
       }
 
-      match /refunds/{refundId} {
+      /* =========================================================
+         NEW: TRUST SCORE HISTORY (FROM NEW RULES)
+      ========================================================== */
+      match /trustScoreHistory/{historyId} {
+        // Users can read their own trust history, admins can read all
+        allow read: if isSignedIn() && (
+          resource.data.get('userId', '') == request.auth.uid ||
+          isAdmin(request.auth.uid)
+        );
+
+        //  Admins can create trust score entries when performing verification
+        allow create: if isAdmin(request.auth.uid);
+
+        // No updates or deletes (immutable audit trail)
+        allow update, delete: if false;
+      }
+
+      /* =========================================================
+         NEW: USER WARNINGS (FROM NEW RULES)
+      ========================================================== */
+      match /userWarnings/{warningId} {
+        // Users can read their own warnings, admins can read all
+        allow read: if isSignedIn() && (
+          resource.data.get('userId', '') == request.auth.uid ||
+          isAdmin(request.auth.uid)
+        );
+
+        // Only admins can create warnings
+        allow create: if isAdmin(request.auth.uid) &&
+          request.resource.data.issuedBy == request.auth.uid;
+
+        // Only admins can update warnings
+        allow update: if isAdmin(request.auth.uid);
+
+        // Only super admins can delete warnings
+        allow delete: if isSuperAdmin(request.auth.uid);
+      }
+
+      /* =========================================================
+         NEW: ADMIN ACTION LOGS (FROM NEW RULES)
+      ========================================================== */
+      match /adminActionLogs/{logId} {
+        // Only admins can read action logs
+        allow read: if isAdmin(request.auth.uid);
+
+        // Admins can create action logs when performing verification
+        allow create: if isAdmin(request.auth.uid);
+
+        // No updates or deletes (immutable audit trail)
+        allow update, delete: if false;
+      }
+
+      /* =========================================================
+         ANALYTICS (OLD STABLE RULES)
+      ========================================================== */
+      match /userAnalytics/{uid} {
         allow read: if isSignedIn() &&
-          (canAccessSponsor(request.auth.uid, sponsorId) ||
-           isAdmin(request.auth.uid));
+          (request.auth.uid == uid || isAdmin(request.auth.uid));
+        allow write: if false; // Read-only, updated by backend
+      }
+
+      match /sponsorAnalytics/{sponsorId} {
+        allow read: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           canAccessSponsor(request.auth.uid, sponsorId));
+        allow write: if false; // Read-only, updated by backend
+      }
+
+      /* =========================================================
+         NOTIFICATIONS / RATINGS / BLOGS (OLD STABLE RULES)
+      ========================================================== */
+      match /notifications/{notificationId} {
+        allow read: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (isSponsor(request.auth.uid) &&
+            resource.data.keys().hasAny(['targetSponsorId']) &&
+            canAccessSponsor(request.auth.uid, resource.data.targetSponsorId)));
+
+        allow create, update: if isSignedIn() && isAdmin(request.auth.uid);
+        allow delete: if isSuperAdmin(request.auth.uid);
+      }
+
+      match /ratings/{ratingId} {
+        allow read: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (isSponsor(request.auth.uid) &&
+            resource.data.keys().hasAny(['sponsorId']) &&
+            canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
+
+        allow create: if isSignedIn();
+        allow update: if isSignedIn() && isAdmin(request.auth.uid);
+        allow delete: if isSuperAdmin(request.auth.uid);
+      }
+
+      match /blogs/{blogId} {
+        allow read: if resource.data.published == true ||
+          (isSignedIn() && isAdmin(request.auth.uid));
+
+        allow create: if isSignedIn() &&
+          isAdmin(request.auth.uid) &&
+          request.resource.data.authorId == request.auth.uid;
+
+        allow update: if isSignedIn() &&
+          isAdmin(request.auth.uid) &&
+          (isSuperAdmin(request.auth.uid) ||
+           resource.data.authorId == request.auth.uid);
+
+        allow delete: if isSuperAdmin(request.auth.uid);
+
+        match /likes/{uid} {
+          allow read: if true;
+          allow write: if isSignedIn() && uid == request.auth.uid;
+        }
+      }
+
+      /* =========================================================
+         XP RULES / BADGE DEFINITIONS (OLD STABLE RULES)
+      ========================================================== */
+      match /xpRules/{ruleId} {
+        allow read: if isSignedIn();
+        allow write: if isSuperAdmin(request.auth.uid);
+      }
+
+      match /badgeDefinitions/{badgeId} {
+        allow read: if isSignedIn();
+        allow write: if isSuperAdmin(request.auth.uid);
+      }
+
+      /* =========================================================
+         AUDIT / BILLING LOGS (OLD STABLE RULES)
+      ========================================================== */
+      match /adminLogs/{logId} {
+        allow read: if isAdmin(request.auth.uid);
         allow write: if false; // Only backend
       }
-    }
 
-    /* =========================================================
-       REWARDS COLLECTION
-    ========================================================== */
-    match /rewards/{rewardId} {
+      match /auditLogs/{logId} {
+        allow read: if isSuperAdmin(request.auth.uid);
+        allow create: if isSignedIn() && isValidAdmin(request.auth.uid);
+        allow update, delete: if false;
+      }
 
-      allow read: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (resource.data.active == true) ||
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
+      match /stripe_webhook_events/{eventId} {
+        allow read: if isAdmin(request.auth.uid);
+        allow write: if false; // Only backend
+      }
 
-      // CRITICAL SECURITY: Only allow reward creation via Cloud Functions or Admin
-      // This prevents client-side bypass of subscription limits
-      allow create: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         // Cloud Functions have special token for bypass
-         (request.auth.token != null &&
-          request.auth.token.aud == "project-mysterispot-ef091" &&
-          request.auth.token.iss == "firebase-adminsdk") ||
-         // Temporary fallback - TO BE REMOVED after Cloud Function deployment
-         (isSponsor(request.auth.uid) &&
-          request.resource.data.keys().hasAny(['sponsorId', 'createdBy']) &&
-          canAccessSponsor(request.auth.uid, request.resource.data.sponsorId) &&
-          // Additional security: require createdBy field to match auth uid
-          request.resource.data.createdBy == request.auth.uid));
+      match /subscriptionChangeLogs/{logId} {
+        allow read: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (resource.data.keys().hasAny(['sponsorId']) &&
+            canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
+        allow write: if false; // Only backend
+      }
 
-      allow update: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (isSponsor(request.auth.uid) &&
-          request.resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, request.resource.data.sponsorId)) ||
-         // Allow users to increment currentRedemptions when redeeming
-         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentRedemptions'])));
+      /* =========================================================
+         REPORTS COLLECTION (OLD STABLE RULES)
+      ========================================================== */
+      match /reports/{reportId} {
+        allow create: if isSignedIn();
+        allow read, update, delete: if false; // Only admins via backend
+      }
 
-      // Allow sponsors to delete their own rewards OR admins to delete any reward
-      allow delete: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
-    }
+      /* =========================================================
+         ADMIN USERS COLLECTION (OLD STABLE RULES)
+      ========================================================== */
+      match /adminUsers/{uid} {
+        // Allow admins and super admins to read all adminUsers
+        // Allow users to read their own document
+        allow read: if isSignedIn() &&
+          (request.auth.uid == uid || isAdmin(request.auth.uid));
 
-    /* =========================================================
-       REWARD REDEMPTIONS (ROOT COLLECTION)
-    ========================================================== */
-    match /rewardRedemptions/{redemptionId} {
+        allow update: if isSignedIn() &&
+          request.auth.uid == uid &&
+          request.resource.data.role == resource.data.role &&
+          request.resource.data.permissions == resource.data.permissions;
 
-      allow read: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId)) ||
-         (resource.data.keys().hasAny(['userId']) &&
-          resource.data.userId == request.auth.uid));
+        allow create, delete: if false; // Only backend
+      }
 
-      allow create: if isSignedIn(); // Users can redeem rewards
+      /* =========================================================
+         COLLECTION GROUP QUERIES (OLD STABLE RULES)
+      ========================================================== */
 
-      allow update: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
+      // Allow sponsors to query redemptions across all users for their rewards
+      match /{path=**}/redemptions/{redemptionId} {
+        allow read: if isSignedIn() &&
+          (isAdmin(request.auth.uid) ||
+           (isSponsor(request.auth.uid) &&
+            resource.data.keys().hasAny(['sponsorId']) &&
+            canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
+      }
 
-      allow delete: if false; // No deletion of redemption records
-    }
+      // Allow collection group queries for ratings subcollections
+      match /{path=**}/ratings/{ratingId} {
+        allow read: if isSignedIn();
+      }
 
-    /* =========================================================
-       USER SPOTS (ROOT COLLECTION) - Spot Discovery Tracking
-    ========================================================== */
-    match /user_spots/{discoveryId} {
-
-      allow read: if isSignedIn();
-
-      allow create: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (request.resource.data.userId == request.auth.uid &&
-          request.resource.id == request.resource.data.userId + '_' + request.resource.data.spotId));
-
-      allow update: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (resource.data.userId == request.auth.uid &&
-          request.resource.data.userId == request.auth.uid));
-
-      allow delete: if isSignedIn() && isAdmin(request.auth.uid);
-    }
-
-    /* =========================================================
-       USER VISITS (ROOT COLLECTION) - Visit History Tracking
-    ========================================================== */
-    match /user_visits/{visitId} {
-
-      allow read: if isSignedIn();
-
-      allow create: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         request.resource.data.userId == request.auth.uid);
-
-      allow update: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (resource.data.userId == request.auth.uid &&
-          request.resource.data.userId == request.auth.uid));
-
-      allow delete: if isSignedIn() && isAdmin(request.auth.uid);
-    }
-
-    /* =========================================================
-       USER CHALLENGES (ROOT COLLECTION) - Challenge Progress
-    ========================================================== */
-    match /user_challenges/{challengeId} {
-
-      allow read: if isSignedIn();
-
-      allow create: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         request.resource.data.userId == request.auth.uid);
-
-      allow update: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (resource.data.userId == request.auth.uid &&
-          request.resource.data.userId == request.auth.uid));
-
-      allow delete: if isSignedIn() && isAdmin(request.auth.uid);
-    }
-
-    /* =========================================================
-       ANALYTICS (READ ONLY)
-    ========================================================== */
-    match /userAnalytics/{uid} {
-      allow read: if isSignedIn() &&
-        (request.auth.uid == uid || isAdmin(request.auth.uid));
-      allow write: if false; // Read-only, updated by backend
-    }
-
-    match /sponsorAnalytics/{sponsorId} {
-      allow read: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         canAccessSponsor(request.auth.uid, sponsorId));
-      allow write: if false; // Read-only, updated by backend
-    }
-
-    /* =========================================================
-       NOTIFICATIONS (ROOT COLLECTION)
-    ========================================================== */
-    match /notifications/{notificationId} {
-
-      allow read: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['targetSponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.targetSponsorId)));
-
-      allow create, update: if isSignedIn() && isAdmin(request.auth.uid);
-
-      allow delete: if isSuperAdmin(request.auth.uid);
-    }
-
-    /* =========================================================
-       RATINGS (ROOT COLLECTION)
-    ========================================================== */
-    match /ratings/{ratingId} {
-
-      allow read: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
-
-      allow create: if isSignedIn();
-
-      allow update: if isSignedIn() && isAdmin(request.auth.uid);
-
-      allow delete: if isSuperAdmin(request.auth.uid);
-    }
-
-    /* =========================================================
-       BLOGS COLLECTION
-    ========================================================== */
-    match /blogs/{blogId} {
-
-      allow read: if resource.data.published == true ||
-        (isSignedIn() && isAdmin(request.auth.uid));
-
-      allow create: if isSignedIn() &&
-        isAdmin(request.auth.uid) &&
-        request.resource.data.authorId == request.auth.uid;
-
-      allow update: if isSignedIn() &&
-        isAdmin(request.auth.uid) &&
-        (isSuperAdmin(request.auth.uid) ||
-         resource.data.authorId == request.auth.uid);
-
-      allow delete: if isSuperAdmin(request.auth.uid);
-
-      match /likes/{uid} {
-        allow read: if true;
-        allow write: if isSignedIn() && uid == request.auth.uid;
+      /* =========================================================
+         DEFAULT DENY (OLD STABLE RULES)
+      ========================================================== */
+      match /{document=**} {
+        allow read, write: if false;
       }
     }
-
-    /* =========================================================
-       XP RULES
-    ========================================================== */
-    match /xpRules/{ruleId} {
-      // All authenticated users can read XP rules (needed to display XP rewards)
-      allow read: if isSignedIn();
-      // Only super admins can create/update/delete XP rules
-      allow write: if isSuperAdmin(request.auth.uid);
-    }
-
-    /* =========================================================
-       BADGE DEFINITIONS
-    ========================================================== */
-    match /badgeDefinitions/{badgeId} {
-      // All authenticated users can read badge definitions (needed to display available badges)
-      allow read: if isSignedIn();
-      // Only super admins can create/update/delete badge definitions
-      allow write: if isSuperAdmin(request.auth.uid);
-    }
-
-    /* =========================================================
-       AUDIT / BILLING LOGS (READ ONLY)
-    ========================================================== */
-    match /adminLogs/{logId} {
-      allow read: if isAdmin(request.auth.uid);
-      allow write: if false; // Only backend
-    }
-
-    match /auditLogs/{logId} {
-      allow read: if isSuperAdmin(request.auth.uid);
-      allow create: if isSignedIn() && isValidAdmin(request.auth.uid);
-      allow update, delete: if false;
-    }
-
-    match /stripe_webhook_events/{eventId} {
-      allow read: if isAdmin(request.auth.uid);
-      allow write: if false; // Only backend
-    }
-
-    match /subscriptionChangeLogs/{logId} {
-      allow read: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
-      allow write: if false; // Only backend
-    }
-
-    /* =========================================================
-       REPORTS COLLECTION (NEW - for reporting users/content)
-    ========================================================== */
-    match /reports/{reportId} {
-      allow create: if isSignedIn();
-      allow read, update, delete: if false; // Only admins via backend
-    }
-
-    /* =========================================================
-       ADMIN USERS COLLECTION
-    ========================================================== */
-    match /adminUsers/{uid} {
-      // Allow admins and super admins to read all adminUsers
-      // Allow users to read their own document
-      allow read: if isSignedIn() &&
-        (request.auth.uid == uid || isAdmin(request.auth.uid));
-
-      allow update: if isSignedIn() &&
-        request.auth.uid == uid &&
-        request.resource.data.role == resource.data.role &&
-        request.resource.data.permissions == resource.data.permissions;
-
-      allow create, delete: if false; // Only backend
-    }
-
-    /* =========================================================
-       COLLECTION GROUP QUERIES
-    ========================================================== */
-
-    // Allow sponsors to query redemptions across all users for their rewards
-    match /{path=**}/redemptions/{redemptionId} {
-      allow read: if isSignedIn() &&
-        (isAdmin(request.auth.uid) ||
-         (isSponsor(request.auth.uid) &&
-          resource.data.keys().hasAny(['sponsorId']) &&
-          canAccessSponsor(request.auth.uid, resource.data.sponsorId)));
-    }
-
-    // Allow collection group queries for ratings subcollections
-    // Ratings are public feedback - any signed-in user can read them
-    match /{path=**}/ratings/{ratingId} {
-      allow read: if isSignedIn();
-    }
-
-    /* =========================================================
-       DEFAULT DENY
-    ========================================================== */
-    match /{document=**} {
-      allow read, write: if false;
-    }
   }
-}

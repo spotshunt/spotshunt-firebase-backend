@@ -1,60 +1,69 @@
-# Firestore Shared Configuration
+# Firebase Shared Configuration - **CENTRALIZED SETUP** ✅
 
-This directory contains all shared Firestore configuration files used across multiple projects (admin-dashboard, android-app, and website).
+This directory contains **ALL** Firebase configurations that are shared across all platforms (Android app, Admin dashboard, Website).
 
-## Purpose
+🎯 **Single Source of Truth** - All Firebase rules, indexes, functions, and configurations are now centralized here.
 
-To maintain a single source of truth for Firestore configuration and prevent file conflicts when changes are made from different projects.
-
-## Directory Structure
+## 📁 Directory Structure
 
 ```
 firestore-shared/
-├── firestore.rules           # Firestore security rules
-├── firestore.indexes.json    # Firestore composite indexes
-├── firebase.json             # Firebase project configuration
-├── .firebaserc              # Firebase project mapping
-├── functions/               # Cloud Functions
+├── firebase.json             # 🔧 MASTER Firebase configuration (ALL services)
+├── firestore.rules           # 🛡️ Firestore security rules (LATEST VERSION)
+├── firestore.indexes.json    # ⚡ Firestore composite indexes
+├── storage.rules            # 📁 Firebase Storage security rules (NEW)
+├── functions/               # ☁️ Cloud Functions
 │   ├── index.js            # Functions entry point
 │   ├── social.js           # Social features (follow/like)
 │   ├── package.json        # Functions dependencies
 │   └── .eslintrc.js        # ESLint configuration
-└── README.md               # This file
+├── .firebaserc              # Firebase project mapping
+└── README.md               # This documentation
 ```
 
-## Files Overview
+## 🎯 **IMPORTANT: DEPLOYMENT IS CENTRALIZED**
 
-### firestore.rules
-Contains Firestore security rules with:
-- Role-based access control (ADMIN, SUPER_ADMIN, SPONSOR)
-- Collection-level permissions
-- Subcollection security rules
-- Field-level validation
-- Helper functions for authorization
+**Deploy from ROOT directory only:**
+```bash
+cd /Users/birjukumar/Project-Spotshunt
+firebase deploy
+```
 
-**Last Updated:** Migrated from android-app (most comprehensive version)
+The root `firebase.json` now points to all files in `firestore-shared/`:
+- `firestore.rules` → `firestore-shared/firestore.rules`
+- `firestore.indexes.json` → `firestore-shared/firestore.indexes.json`
+- `storage.rules` → `firestore-shared/storage.rules`
+- `functions` → `firestore-shared/functions`
 
-### firestore.indexes.json
-Contains 60+ composite indexes for optimal query performance across collections:
-- blogs, challenges, discoveries, ratings, redemptions
-- rewards, sponsorAnalytics, sponsors, spots
-- user_challenges, user_visits, users
+## 🔧 Configuration Files
 
-### firebase.json
-Firebase CLI deployment configuration pointing to:
-- Firestore rules and indexes
-- Cloud Functions with predeploy linting
+### `firebase.json` - **MASTER Configuration**
+Contains complete setup for:
+- **Firestore**: Rules and indexes (pointing to firestore-shared/)
+- **Storage**: Security rules for image uploads/deletions
+- **Functions**: Node.js Cloud Functions
+- **Hosting**: Admin dashboard and website deployment
+- **Emulators**: Complete development environment
+- **Remote Config**: App configuration management
 
-### .firebaserc
-Firebase project configuration:
-- Default project: `mysteryspot-ef091`
+### `firestore.rules` - **LATEST Database Security**
+✅ **Updated January 7, 2026** - Most comprehensive version
+- Advanced role-based access (SUPER_ADMIN, ADMIN, SPONSOR)
+- Complete collection permissions
+- Anti-cheat and verification system
+- User content management
+- Admin review workflows
 
-### functions/
-Cloud Functions for backend operations:
-- `toggleFollow` / `toggleLike` - Social interaction handlers
-- `checkFollowStatus` / `checkLikeStatus` - Status checkers
-- `batchCheckFollowStatus` / `batchCheckLikeStatus` - Batch operations
-- Firestore trigger handlers for counter updates
+### `storage.rules` - **NEW File Security**
+✅ **Added January 7, 2026** - Enables comprehensive spot deletion
+- Image upload/download permissions
+- **Admin deletion capabilities** (enables Storage cleanup)
+- File size and type validation (JPEG, PNG, WebP)
+- User profile and spot image management
+- Sponsor, notification, and reward image handling
+
+### `firestore.indexes.json` - **Query Optimization**
+60+ composite indexes for optimal performance across all collections
 
 ## Usage
 

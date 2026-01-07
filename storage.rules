@@ -1,0 +1,144 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Mystery Spots App
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ====================== HELPER FUNCTIONS ======================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // Check if user is admin via Firebase Auth custom claims
+      return request.auth != null &&
+             request.auth.token.admin == true;
+    }
+
+    function isValidImageFile() {
+      return request.resource != null
+             && request.resource.contentType != null
+             && request.resource.contentType.matches('image/.*')
+             && (request.resource.contentType.matches('image/jpeg')
+                 || request.resource.contentType.matches('image/jpg')
+                 || request.resource.contentType.matches('image/png')
+                 || request.resource.contentType.matches('image/webp'));
+    }
+
+    function isValidFileSize() {
+      return request.resource != null && request.resource.size < 10 * 1024 * 1024; // Max 10MB
+    }
+
+    // ====================== SPOT IMAGES ======================
+    // Allow authenticated users to upload images to spots folder
+    match /spots/{spotId}/{allPaths=**} {
+      // Allow read access to all authenticated users (for viewing images)
+      allow read: if isAuthenticated();
+
+      // Allow upload and update with validation (separated from delete)
+      allow create, update: if isAuthenticated()
+                            && isValidImageFile()
+                            && isValidFileSize();
+
+      // Allow delete for admin users (enables comprehensive spot deletion)
+      allow delete: if isAdmin();
+    }
+
+    // ====================== USER PROFILE IMAGES ======================
+    // Allow users to manage their own profile images
+    match /users/{userId}/profile/{allPaths=**} {
+      // Allow users to read only their own profile images
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+
+      // Allow users to create/update only their own profile images with validation
+      allow create, update: if isAuthenticated()
+                            && request.auth.uid == userId
+                            && isValidImageFile()
+                            && request.resource.size < 5 * 1024 * 1024; // Max 5MB for profile
+
+      // Allow users to delete their own profile images
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ====================== SPONSOR IMAGES ======================
+    // Allow admin users to upload and manage sponsor logos
+    match /sponsors/{allPaths=**} {
+      // Allow read access to all authenticated users (for viewing sponsor logos)
+      allow read: if isAuthenticated();
+
+      // Allow create/update for admin users with validation
+      allow create, update: if isAdmin()
+                            && isValidImageFile()
+                            && isValidFileSize();
+
+      // Allow delete for admin users
+      allow delete: if isAdmin();
+    }
+
+    // ====================== NOTIFICATION IMAGES ======================
+    // Allow admin users to upload and manage notification images
+    match /notifications/{allPaths=**} {
+      // Allow read access to all authenticated users (for viewing notification images)
+      allow read: if isAuthenticated();
+
+      // Allow create/update for admin users with validation
+      allow create, update: if isAdmin()
+                            && isValidImageFile()
+                            && isValidFileSize();
+
+      // Allow delete for admin users
+      allow delete: if isAdmin();
+    }
+
+    // ====================== REWARD IMAGES ======================
+    // Allow admin users to upload and manage reward images
+    match /rewards/{allPaths=**} {
+      // Allow read access to all authenticated users (for viewing reward images)
+      allow read: if isAuthenticated();
+
+      // Allow create/update for admin users with validation
+      allow create, update: if isAdmin()
+                            && isValidImageFile()
+                            && isValidFileSize();
+
+      // Allow delete for admin users
+      allow delete: if isAdmin();
+    }
+
+    // ====================== ADMIN UPLOADED CONTENT ======================
+    match /admin/{path=**} {
+      // Only admins can read/write admin content
+      allow read, write: if isAdmin();
+    }
+
+    // ====================== TEMPORARY UPLOADS ======================
+    match /temp/{userId}/{path=**} {
+      // Users can upload to their temp folder
+      allow create: if isAuthenticated() && request.auth.uid == userId && isValidFileSize();
+
+      // Auto-delete temp files (handled by Cloud Functions)
+      allow delete: if true; // Functions need to clean up
+    }
+
+    // ====================== PUBLIC ASSETS ======================
+    match /public/{path=**} {
+      // Anyone can read public assets
+      allow read: if true;
+
+      // Only admins can write public assets
+      allow write: if isAdmin();
+    }
+
+    // ====================== BACKUP AND ARCHIVE DATA ======================
+    match /backups/{path=**} {
+      // Only admins can access backups
+      allow read, write: if isAdmin();
+    }
+
+    // ====================== DEFAULT DENY RULE ======================
+    // This should be the last rule - denies everything not explicitly allowed above
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
