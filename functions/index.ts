@@ -464,6 +464,8 @@ async function sendToToken(
   payload: FCMPayload
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    console.log(`🔵 [sendToToken] CALLED with payload:`, JSON.stringify(payload));
+
     const message: admin.messaging.Message = {
       notification: {
         title: payload.title,
@@ -474,10 +476,15 @@ async function sendToToken(
       token
     };
 
+    console.log(`🔵 [sendToToken] FCM message object:`, JSON.stringify(message));
+    console.log(`🔵 [sendToToken] About to call messaging.send()...`);
+
     await messaging.send(message);
+
+    console.log(`✅ [sendToToken] messaging.send() completed successfully`);
     return { success: true };
   } catch (error: any) {
-    console.error(`Error sending to token ${token}:`, error);
+    console.error(`❌ [sendToToken] Error sending to token ${token}:`, error);
     return { success: false, error: error.message };
   }
 }
@@ -565,10 +572,14 @@ async function sendSingleNotificationInternal(
   payload: FCMPayload
 ): Promise<NotificationDeliveryResult> {
   try {
+    console.log(`🟢 [sendSingleNotificationInternal] CALLED - notificationId: ${notificationId}, userId: ${targetUserId}`);
+    console.log(`🟢 [sendSingleNotificationInternal] Payload:`, JSON.stringify(payload));
+
     // Get the target user
     const userDoc = await db.collection('users').doc(targetUserId).get();
 
     if (!userDoc.exists) {
+      console.log(`⚠️ [sendSingleNotificationInternal] User not found: ${targetUserId}`);
       return {
         success: false,
         error: 'User not found'
@@ -578,6 +589,7 @@ async function sendSingleNotificationInternal(
     const userData = userDoc.data();
 
     if (!userData || !userData.active) {
+      console.log(`⚠️ [sendSingleNotificationInternal] User is not active: ${targetUserId}`);
       return {
         success: false,
         error: 'User is not active'
@@ -585,17 +597,22 @@ async function sendSingleNotificationInternal(
     }
 
     if (!userData.fcmToken) {
+      console.log(`⚠️ [sendSingleNotificationInternal] User has no FCM token: ${targetUserId}`);
       return {
         success: false,
         error: 'User has no FCM token'
       };
     }
 
+    console.log(`🟢 [sendSingleNotificationInternal] Calling sendToToken...`);
     // Send FCM message
     const fcmResult = await sendToToken(userData.fcmToken, payload);
+    console.log(`🟢 [sendSingleNotificationInternal] sendToToken completed:`, fcmResult);
 
+    console.log(`🟢 [sendSingleNotificationInternal] Creating user notification document...`);
     // Create user notification document
     await createUserNotification(targetUserId, notificationId, payload);
+    console.log(`🟢 [sendSingleNotificationInternal] User notification document created`);
 
     return {
       success: fcmResult.success,
@@ -605,7 +622,7 @@ async function sendSingleNotificationInternal(
     };
 
   } catch (error: any) {
-    console.error('Error sending single notification:', error);
+    console.error('❌ [sendSingleNotificationInternal] Error sending single notification:', error);
     return {
       success: false,
       error: error.message
@@ -968,26 +985,28 @@ export const sendSpotApprovalNotification = functions.https.onCall(
         spotTitle: spotTitle
       });
 
-      const payload: FCMPayload = {
+      // Create notification record first to get the ID
+      const notificationRef = await db.collection('notifications').add({
         title: 'Spot Approved! 🎉',
         body: `Your spot "${spotTitle}" has been approved! You earned ${SPOT_APPROVAL_XP} XP!`,
-        data: {
-          type: 'spot_approval',
-          spotTitle,
-          xpAwarded: SPOT_APPROVAL_XP.toString()
-        }
-      };
-
-      // Create notification record
-      const notificationRef = await db.collection('notifications').add({
-        title: payload.title,
-        body: payload.body,
         type: 'single',
         targetUserId: userId,
         city: null,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         sent: false
       });
+
+      // Create payload with notificationId included
+      const payload: FCMPayload = {
+        title: 'Spot Approved! 🎉',
+        body: `Your spot "${spotTitle}" has been approved! You earned ${SPOT_APPROVAL_XP} XP!`,
+        data: {
+          type: 'spot_approval',
+          spotTitle,
+          xpAwarded: SPOT_APPROVAL_XP.toString(),
+          notificationId: notificationRef.id  // Include notification ID to prevent duplicates
+        }
+      };
 
       // Send the notification
       const result = await sendSingleNotificationInternal(notificationRef.id, userId, payload);
@@ -1172,29 +1191,37 @@ export const onRewardRedeemed = firestore
 export const sendSpotRejectionNotification = functions.https.onCall(
   async (request: functions.https.CallableRequest<{ userId: string; spotTitle: string; reason?: string }>): Promise<NotificationDeliveryResult> => {
     const data = request.data;
+    console.log(`🟡 [sendSpotRejectionNotification] FUNCTION CALLED - Request data:`, JSON.stringify(data));
+
     try {
       const { userId, spotTitle, reason } = data;
 
-      const payload: FCMPayload = {
+      console.log(`🟡 [sendSpotRejectionNotification] Creating notification record in database...`);
+      // Create notification record first to get the ID
+      const notificationRef = await db.collection('notifications').add({
         title: 'Spot Submission Declined 📍',
         body: `Your spot "${spotTitle}" was not approved.${reason ? ` Reason: ${reason}` : ''}`,
-        data: {
-          type: 'spot_rejection',
-          spotTitle,
-          reason: reason || ''
-        }
-      };
-
-      // Create notification record
-      const notificationRef = await db.collection('notifications').add({
-        title: payload.title,
-        body: payload.body,
         type: 'single',
         targetUserId: userId,
         city: null,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         sent: false
       });
+
+      // Create payload with notificationId included
+      const payload: FCMPayload = {
+        title: 'Spot Submission Declined 📍',
+        body: `Your spot "${spotTitle}" was not approved.${reason ? ` Reason: ${reason}` : ''}`,
+        data: {
+          type: 'spot_rejection',
+          spotTitle,
+          reason: reason || '',
+          notificationId: notificationRef.id  // Include notification ID to prevent duplicates
+        }
+      };
+
+      console.log(`🔍 DEBUG: Notification ID = ${notificationRef.id}`);
+      console.log(`🔍 DEBUG: Payload data =`, JSON.stringify(payload.data));
 
       // Send the notification
       const result = await sendSingleNotificationInternal(notificationRef.id, userId, payload);

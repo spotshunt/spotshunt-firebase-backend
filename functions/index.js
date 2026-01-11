@@ -2247,10 +2247,39 @@ const initializeSponsorQRSecrets = functions.https.onCall(async (request) => {
  */
 async function checkAdminPermissions(userId) {
   try {
-    const adminDoc = await db.doc(`admins/${userId}`).get();
-    return adminDoc.exists;
+    console.log(`🔍 Checking admin permissions for user: ${userId}`);
+
+    // Check adminUsers collection first
+    const adminUserDoc = await db.doc(`adminUsers/${userId}`).get();
+    if (adminUserDoc.exists) {
+      const adminData = adminUserDoc.data();
+      const isActive = adminData.isActive === true;
+      const hasAdminRole = adminData.role === 'ADMIN' || adminData.role === 'SUPER_ADMIN';
+
+      if (isActive && hasAdminRole) {
+        console.log(`✓ User ${userId} is admin in adminUsers collection (role: ${adminData.role})`);
+        return true;
+      }
+    }
+
+    // Fallback: Check users collection for admin/superadmin role
+    const userDoc = await db.doc(`users/${userId}`).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      const isActive = userData.active === true || userData.isActive === true;
+      const role = (userData.role || '').toLowerCase();
+      const hasAdminRole = role === 'admin' || role === 'superadmin';
+
+      if (isActive && hasAdminRole) {
+        console.log(`✓ User ${userId} is admin in users collection (role: ${userData.role})`);
+        return true;
+      }
+    }
+
+    console.log(`⚠️ User ${userId} not found as admin in adminUsers or users collection`);
+    return false;
   } catch (error) {
-    console.warn(`Admin check failed for user ${userId}:`, error);
+    console.error(`❌ Admin check failed for user ${userId}:`, error);
     return false;
   }
 }
@@ -2936,46 +2965,6 @@ const sendSingleNotification = functions.https.onCall(async (request) => {
 });
 
 /**
- * Internal helper to send notification to single user
- */
-async function sendSingleNotificationInternal(notificationId, userId, payload) {
-  try {
-    const userDoc = await db.collection('users').doc(userId).get();
-
-    if (!userDoc.exists) {
-      throw new Error('User not found');
-    }
-
-    const userData = userDoc.data();
-
-    if (!userData.fcmToken) {
-      await db.collection('notifications').doc(notificationId).update({
-        sent: true,
-        error: 'No FCM token'
-      });
-      return { success: false, error: 'User has no FCM token' };
-    }
-
-    await admin.messaging().send({
-      token: userData.fcmToken,
-      notification: { title: payload.title, body: payload.body },
-      data: payload.data || {}
-    });
-
-    await db.collection('notifications').doc(notificationId).update({ sent: true });
-
-    return { success: true };
-  } catch (error) {
-    console.error('Send single notification internal failed:', error);
-    await db.collection('notifications').doc(notificationId).update({
-      sent: true,
-      error: error.message
-    });
-    throw error;
-  }
-}
-
-/**
  * Send custom notification with advanced targeting
  */
 const sendCustomNotification = functions.https.onCall(async (request) => {
@@ -3152,7 +3141,8 @@ const sendSpotRejectionNotification = functions.https.onCall(async (request) => 
   }
 
   try {
-    return await sendSpotRejectionNotificationInternal(userId, spotTitle, reason);
+    const result = await sendSpotRejectionNotificationInternal(userId, spotTitle, reason);
+    return result;
   } catch (error) {
     console.error('Spot rejection notification failed:', error);
     throw new functions.https.HttpsError('internal', 'Failed to send spot rejection notification');
@@ -3411,20 +3401,24 @@ const onSpotWrite = firestore.document('spots/{spotId}').onWrite(async (change) 
         'stats.verifiedSpotCount': admin.firestore.FieldValue.increment(1)
       });
 
+      // ❌ DISABLED: Notification is now sent explicitly by admin dashboard
+      // This was causing duplicate notifications
       // Send approval notification
-      await sendSpotApprovalNotificationInternal(newData.createdBy, newData.title || 'Your spot');
+      // await sendSpotApprovalNotificationInternal(newData.createdBy, newData.title || 'Your spot');
     }
 
     // Check if verification status changed to rejected
     if (oldData && oldData.verificationStatus !== 'REJECTED' && newData.verificationStatus === 'REJECTED') {
       console.log(`Spot rejected: ${spotId}`);
 
+      // ❌ DISABLED: Notification is now sent explicitly by admin dashboard
+      // This was causing duplicate notifications
       // Send rejection notification
-      await sendSpotRejectionNotificationInternal(
-        newData.createdBy,
-        newData.title || 'Your spot',
-        newData.rejectionReason || ''
-      );
+      // await sendSpotRejectionNotificationInternal(
+      //   newData.createdBy,
+      //   newData.title || 'Your spot',
+      //   newData.rejectionReason || ''
+      // );
     }
 
     return null;
